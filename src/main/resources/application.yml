@@ -1,0 +1,22 @@
+spring:
+  application.name: backend
+
+  r2dbc:
+    url: r2dbc:h2:mem:///taskdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+
+logging:
+  level:
+    org.springframework.data.r2dbc: DEBUG
+    org.springframework.jdbc: DEBUG
+    org.springframework.transaction: DEBUG
+    io.r2dbc: DEBUG
+
+server:
+  port: 8000
