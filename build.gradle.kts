@@ -37,7 +37,8 @@ dependencies {
     implementation("io.r2dbc:r2dbc-h2")
     implementation("com.h2database:h2")
 
-    implementation("com.aallam.openai:openai-client:3.6.0")
+    implementation("com.aallam.openai:openai-client:3.8.2")
+    implementation("io.ktor:ktor-client-okhttp:2.3.6")
 
     // util
     developmentOnly("org.springframework.boot:spring-boot-devtools")
