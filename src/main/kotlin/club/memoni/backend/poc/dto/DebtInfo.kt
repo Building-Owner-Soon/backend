@@ -1,5 +1,6 @@
-package club.memoni.backend.poc.model
+package club.memoni.backend.poc.dto
 
+import club.memoni.backend.poc.dto.enums.PaymentType
 import com.fasterxml.jackson.annotation.JsonFormat
 import java.time.LocalDate
 

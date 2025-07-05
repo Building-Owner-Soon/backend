@@ -81,7 +81,8 @@ class OpenAiService(
                     content = systemPrompt
                 ),
                 ChatMessage(
-                    role = ChatRole.User,
+                    role
+                    = ChatRole.User,
                     content = text
                 )
             )

@@ -2,7 +2,7 @@ package club.memoni.backend.poc.service
 
 import club.memoni.backend.poc.ai.LLMService
 import club.memoni.backend.poc.config.JacksonConfiguration
-import club.memoni.backend.poc.model.PaymentType
+import club.memoni.backend.poc.dto.enums.PaymentType
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

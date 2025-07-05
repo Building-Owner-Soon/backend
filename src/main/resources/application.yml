@@ -11,7 +11,7 @@ spring:
       path: /h2-console
 openai:
   api:
-    key: "**SECRET**"
+    key: "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"
 
 logging:
   level:

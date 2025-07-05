@@ -2,7 +2,7 @@ package club.memoni.backend.poc.service
 
 import club.memoni.backend.poc.ai.MockLLMService
 import club.memoni.backend.poc.config.JacksonConfiguration
-import club.memoni.backend.poc.model.PaymentType
+import club.memoni.backend.poc.dto.enums.PaymentType
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.shouldBe
