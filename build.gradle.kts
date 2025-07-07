@@ -1,8 +1,30 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
+    kotlin("jvm") version "1.9.23"
+    kotlin("plugin.spring") version "1.9.23"
     id("org.springframework.boot") version "3.4.6"
     id("io.spring.dependency-management") version "1.1.7"
+    id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    id("org.jlleitschuh.gradle.ktlint") version "12.3.0"
+}
+
+detekt {
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    allRules = false
+    parallel = true
+    autoCorrect = false
+}
+
+ktlint {
+    verbose.set(true)
+    outputToConsole.set(true)
+    ignoreFailures.set(false)
+
+    filter {
+        exclude("**/generated/**")
+        exclude("**/build/**")
+        include("**/src/**")
+    }
 }
 
 group = "club.memoni"
@@ -37,11 +59,10 @@ dependencies {
     implementation("io.r2dbc:r2dbc-h2")
     implementation("com.h2database:h2")
 
-
     // util
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
-    //test
+    // test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("io.kotest:kotest-runner-junit5:${property("KOTEST_VERSION")}")
@@ -62,4 +83,19 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.register<Copy>("copyPreCommitHook") {
+    description = "Copy pre-commit git hook from the git-hooks to the .git/hooks folder."
+    group = "git hooks"
+    outputs.upToDateWhen { false }
+    from("$rootDir/git-hooks/pre-commit")
+    into("$rootDir/.git/hooks/")
+    doLast {
+        file("$rootDir/.git/hooks/pre-commit").setExecutable(true)
+    }
+}
+
+tasks.build {
+    dependsOn("copyPreCommitHook")
 }
