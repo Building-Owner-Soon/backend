@@ -86,16 +86,29 @@ tasks.withType<Test> {
 }
 
 tasks.register<Copy>("copyPreCommitHook") {
-    description = "Copy pre-commit git hook from the git-hooks to the .git/hooks folder."
+    description = "Copy pre-commit git hook from the scripts to the .git/hooks"
     group = "git hooks"
     outputs.upToDateWhen { false }
-    from("$rootDir/git-hooks/pre-commit")
+    from("$rootDir/scripts/pre-commit.sh")
     into("$rootDir/.git/hooks/")
+    rename("pre-commit.sh", "pre-commit")
     doLast {
         file("$rootDir/.git/hooks/pre-commit").setExecutable(true)
     }
 }
 
+tasks.register<Copy>("copyPrePushHook") {
+    description = "Copy pre-push git hook from git-hooks to .git/hooks"
+    group = "git hooks"
+    outputs.upToDateWhen { false }
+    from("$rootDir/scripts/pre-push.sh")
+    into("$rootDir/.git/hooks/")
+    rename("pre-push.sh", "pre-push")
+    doLast {
+        file("$rootDir/.git/hooks/pre-push").setExecutable(true)
+    }
+}
+
 tasks.build {
-    dependsOn("copyPreCommitHook")
+    dependsOn("copyPreCommitHook", "copyPrePushHook")
 }
