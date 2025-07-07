@@ -5,7 +5,7 @@ import reactor.core.publisher.Mono
 
 class GeneralStyleOrderService(
     private val userRepository: GeneralStyleUserRepository,
-    private val orderRepository: GeneralStyleOrderRepository
+    private val orderRepository: GeneralStyleOrderRepository,
 ) {
     fun getTotalOrderPriceAmount(userId: String): Mono<Int> {
         /**
@@ -16,9 +16,9 @@ class GeneralStyleOrderService(
          * 흐름이 명시적이고 reactive stream을 직접적으로 처리
          * */
         return userRepository.findById(userId) // Mono<User>
-            .flatMap { user ->  // 구독하고 있는 Mono객체에서 User가 emit되었을때 해당 람다 실행
+            .flatMap { user -> // 구독하고 있는 Mono객체에서 User가 emit되었을때 해당 람다 실행
                 orderRepository.findByUserId(user.id) // Flux<Order>
-                    .map { it.price }   // Flux<Int>
+                    .map { it.price } // Flux<Int>
                     .reduce(0) { acc, price -> acc + price } // Mono<Int>
             }
     }
@@ -31,11 +31,13 @@ class GeneralStyleUserRepository {
 }
 
 class GeneralStyleOrderRepository {
+    @Suppress("UnusedParameter")
     fun findByUserId(userId: String): Flux<Order> {
+        // 실제 구현에서는 userId를 사용하여 DB 조회
         return Flux.just(
             Order(100),
             Order(200),
-            Order(300)
+            Order(300),
         )
     }
 }
