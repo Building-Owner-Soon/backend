@@ -1,4 +1,4 @@
-package club.memoni.study.webflux.codestylecomparison
+package com.bos.study.webflux.codestylecomparison
 
 class CoroutineStyleOrderService(
     private val userRepository: CoroutineStyleUserRepository,

@@ -27,7 +27,7 @@ ktlint {
     }
 }
 
-group = "club.memoni"
+group = "com.bos"
 version = "0.0.1-SNAPSHOT"
 
 java {

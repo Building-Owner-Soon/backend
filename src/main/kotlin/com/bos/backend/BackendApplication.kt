@@ -1,4 +1,4 @@
-package club.memoni.backend
+package com.bos.backend
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

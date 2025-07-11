@@ -1,4 +1,4 @@
-package club.memoni.study.webflux.codestylecomparison
+package com.bos.study.webflux.codestylecomparison
 
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono

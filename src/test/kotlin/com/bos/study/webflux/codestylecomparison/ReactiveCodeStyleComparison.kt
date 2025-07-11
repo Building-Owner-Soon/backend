@@ -1,4 +1,4 @@
-package club.memoni.study.webflux.codestylecomparison
+package com.bos.study.webflux.codestylecomparison
 
 import io.kotest.core.spec.style.StringSpec
 
