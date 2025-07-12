@@ -3,6 +3,7 @@ package club.memoni.study.webflux.codestylecomparison
 import io.kotest.core.spec.style.StringSpec
 
 data class User(val id: String, val name: String)
+
 data class Order(val price: Int)
 
 class ReactiveCodeStyleComparison : StringSpec({

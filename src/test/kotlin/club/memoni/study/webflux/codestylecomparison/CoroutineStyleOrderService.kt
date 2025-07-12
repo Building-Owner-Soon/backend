@@ -2,7 +2,7 @@ package club.memoni.study.webflux.codestylecomparison
 
 class CoroutineStyleOrderService(
     private val userRepository: CoroutineStyleUserRepository,
-    private val orderRepository: CoroutineStyleOrderRepository
+    private val orderRepository: CoroutineStyleOrderRepository,
 ) {
     suspend fun getTotalOrderAmount(userId: String): Int {
         val user = userRepository.findById(userId)
@@ -10,7 +10,6 @@ class CoroutineStyleOrderService(
         return orders.sumOf { it.price }
     }
 }
-
 
 class CoroutineStyleUserRepository {
     // suspend keyword가 redundant한 이유는 실제 DB호출이 아니기 때문
@@ -21,11 +20,13 @@ class CoroutineStyleUserRepository {
 
 class CoroutineStyleOrderRepository {
     // suspend keyword가 redundant한 이유는 실제 DB호출이 아니기 때문
+    @Suppress("UnusedParameter")
     suspend fun findByUserId(userId: String): List<Order> {
+        // 실제 구현에서는 userId를 사용하여 DB 조회
         return listOf(
             Order(100),
             Order(200),
-            Order(300)
+            Order(300),
         )
     }
 }
