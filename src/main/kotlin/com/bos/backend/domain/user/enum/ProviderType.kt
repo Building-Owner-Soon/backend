@@ -1,6 +1,6 @@
 package com.bos.backend.domain.user.enum
 
-enum class AuthProviderType(
+enum class ProviderType(
     val value: String,
 ) {
     KAKAO("KAKAO"),
@@ -8,7 +8,7 @@ enum class AuthProviderType(
     ;
 
     companion object {
-        fun fromValue(value: String): AuthProviderType =
+        fun fromValue(value: String): ProviderType =
             entries.find { it.value == value }
                 ?: throw IllegalArgumentException("Unknown provider: $value")
     }

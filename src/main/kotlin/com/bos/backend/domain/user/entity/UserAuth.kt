@@ -1,5 +1,6 @@
 package com.bos.backend.domain.user.entity
 
+import com.bos.backend.domain.user.enum.ProviderType
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
@@ -11,14 +12,19 @@ data class UserAuth(
     val id: Long? = null,
     @Column("user_id")
     val userId: Long,
-    @Column("user_provider_id")
-    val userProviderId: Long,
+    @Column("provider_type")
+    private val _providerType: String, // TODO: r2dbc가 AttributeConberter 지원하는지 확인 필요
     @Column("provider_id")
-    val providerId: String,
+    val providerId: String? = null,
+    @Column("email")
+    val email: String,
     @Column("password_hash")
     val passwordHash: String? = null,
     @Column("last_login_at")
     val lastLoginAt: Instant? = null,
 ) {
+    val providerType: ProviderType
+        get() = ProviderType.fromValue(_providerType)
+
     fun updateLastLoginAt(): UserAuth = this.copy(lastLoginAt = Instant.now())
 }
