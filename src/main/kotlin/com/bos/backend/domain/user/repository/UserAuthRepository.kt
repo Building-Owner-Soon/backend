@@ -5,15 +5,22 @@ import com.bos.backend.domain.user.entity.UserAuth
 interface UserAuthRepository {
     suspend fun save(userAuth: UserAuth): UserAuth
 
-    suspend fun findById(id: Long): UserAuth?
-
-    suspend fun findByProviderIdAnd(
+    suspend fun findByUserIdAndProviderType(
         userId: Long,
-        providerId: Long,
+        providerType: String,
     ): UserAuth?
 
-    suspend fun findByProviderIdAndProviderId(
+    suspend fun findByProviderIdAndProviderType(
         providerId: String,
-        userProviderId: Long,
+        providerType: String,
     ): UserAuth?
+
+    suspend fun findByEmailAndProviderType(
+        email: String,
+        providerType: String,
+    ): UserAuth?
+
+    suspend fun existsByEmail(email: String): Boolean
+
+    suspend fun updateLastLoginAt(id: Long)
 }
