@@ -61,8 +61,8 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar $USER@$HOST:/home/$USER/app.jar
+          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar $USER@$HOST:/home/$USER/bos-backend-${{ steps.version.outputs.VERSION }}.jar
           ssh -i private_key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
             pkill -f 'java -jar' || true
-            nohup java -jar /home/$USER/app.jar > app.log 2>&1 &
+            nohup java -jar /home/$USER/bos-backend-${{ steps.version.outputs.VERSION }}.jar > bos-backend-${{ steps.version.outputs.VERSION }}.log 2>&1 &
           EOF
