@@ -56,8 +56,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
     // h2
-    implementation("io.r2dbc:r2dbc-h2")
-    implementation("com.h2database:h2")
+    implementation("org.mariadb:r2dbc-mariadb:1.1.4")
 
     // jwt
     implementation("io.jsonwebtoken:jjwt-api:${property("JJWT_VERSION")}")

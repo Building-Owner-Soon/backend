@@ -1,9 +1,9 @@
 package com.bos.backend.presentation.auth.dto
 
-import com.bos.backend.domain.user.enum.AuthProviderType
+import com.bos.backend.domain.user.enum.ProviderType
 
 sealed class MeResponse {
-    abstract val provider: AuthProviderType
+    abstract val provider: ProviderType
     abstract val userId: Long
     abstract val email: String
     abstract val role: String
@@ -11,7 +11,7 @@ sealed class MeResponse {
 }
 
 data class BosAuthMeResponse(
-    override val provider: AuthProviderType = AuthProviderType.BOS,
+    override val provider: ProviderType = ProviderType.BOS,
     override val userId: Long,
     override val email: String,
     override val role: String = "USER",
@@ -19,7 +19,7 @@ data class BosAuthMeResponse(
 ) : MeResponse()
 
 data class KakaoAuthMeResponse(
-    override val provider: AuthProviderType = AuthProviderType.KAKAO,
+    override val provider: ProviderType = ProviderType.KAKAO,
     override val userId: Long,
     override val email: String,
     override val role: String = "USER",

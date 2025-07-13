@@ -2,13 +2,9 @@ spring:
   application.name: backend
 
   r2dbc:
-    url: r2dbc:h2:mem:///taskdb;DB_CLOSE_DELAY=-1
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: r2dbc:mariadb://localhost:13306/bos
+    username: root
+    password: 1234
 
 application:
   jwt:

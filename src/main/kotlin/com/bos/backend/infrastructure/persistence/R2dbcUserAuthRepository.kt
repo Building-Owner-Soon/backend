@@ -9,25 +9,25 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 interface UserAuthCoroutineRepository : CoroutineCrudRepository<UserAuth, Long> {
-    @Query("SELECT * FROM user_auth WHERE provider_id = :providerId AND provider_type = :providerType")
+    @Query("SELECT * FROM user_auths WHERE provider_id = :providerId AND provider_type = :providerType")
     suspend fun findByProviderIdAndProviderType(
         @Param("providerId") providerId: String,
         @Param("providerType") providerType: String,
     ): UserAuth?
 
-    @Query("SELECT * FROM user_auth WHERE email = :email AND provider_type = :providerType")
+    @Query("SELECT * FROM user_auths WHERE email = :email AND provider_type = :providerType")
     suspend fun findByEmailAndProviderType(
         @Param("email") email: String,
         @Param("providerType") providerType: String,
     ): UserAuth?
 
-    @Query("SELECT COUNT(*) > 0 FROM user_auth WHERE email = :email")
+    @Query("SELECT COUNT(*) > 0 FROM user_auths WHERE email = :email")
     suspend fun existsByEmail(
         @Param("email") email: String,
     ): Boolean
 
     @Modifying
-    @Query("UPDATE user_auth SET last_login_at = NOW() WHERE id = :id")
+    @Query("UPDATE user_auths SET last_login_at = NOW() WHERE id = :id")
     suspend fun updateLastLoginAt(
         @Param("id") id: Long,
     ): Int
