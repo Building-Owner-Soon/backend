@@ -1,4 +1,4 @@
-package com.bos.backend.application.auth
+package com.bos.backend.application.auth.strategy
 
 import com.bos.backend.domain.user.enum.ProviderType
 import org.springframework.stereotype.Component

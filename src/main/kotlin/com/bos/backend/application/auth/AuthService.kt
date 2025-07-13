@@ -1,5 +1,6 @@
 package com.bos.backend.application.auth
 
+import com.bos.backend.application.auth.strategy.AuthStrategyResolver
 import com.bos.backend.application.service.JwtService
 import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
