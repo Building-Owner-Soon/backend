@@ -1,4 +1,4 @@
-package com.bos.backend.infrastructure
+package com.bos.backend.infrastructure.external
 
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
