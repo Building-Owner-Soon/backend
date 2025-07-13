@@ -59,6 +59,11 @@ dependencies {
     implementation("io.r2dbc:r2dbc-h2")
     implementation("com.h2database:h2")
 
+    // jwt
+    implementation("io.jsonwebtoken:jjwt-api:${property("JJWT_VERSION")}")
+    implementation("io.jsonwebtoken:jjwt-impl:${property("JJWT_VERSION")}")
+    implementation("io.jsonwebtoken:jjwt-jackson:${property("JJWT_VERSION")}") // JSON 처리
+
     // util
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 

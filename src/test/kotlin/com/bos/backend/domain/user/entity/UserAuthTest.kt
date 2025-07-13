@@ -14,6 +14,7 @@ class UserAuthTest :
                 userId = 1L,
                 _providerType = "KAKAO",
                 providerId = "123456",
+                email = "abc@abc.com",
                 lastLoginAt = null,
             )
         "providerType 참조시 ProviderType 객체를 반환해야한다" {
