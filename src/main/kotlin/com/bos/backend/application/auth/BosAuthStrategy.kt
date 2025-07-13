@@ -19,6 +19,7 @@ class BosAuthStrategy(
         get() = ProviderType.BOS
 
     override suspend fun signUp(request: SignUpRequestDTO): AuthResult {
+        requireNotNull(request.email) { "Email is required for signup" }
         requireNotNull(request.password) { "Password is required for BOS signup" }
 
         if (userAuthRepository.existsByEmail(request.email)) {
@@ -28,14 +29,14 @@ class BosAuthStrategy(
         val user =
             userRepository.save(
                 User(
-                    nickname = "닉네임 임시",
+                    nickname = "닉네임 임시", // TODO: random nickname generator
                     allowNotification = false,
                 ),
             )
 
         val userAuth =
             userAuthRepository.save(
-                // TODO: providerType에 딸흔 생성 제어 방법 고민
+                // TODO: providerType에 따른 생성 제어 방법 고민
                 UserAuth(
                     null,
                     userId = user.id!!,

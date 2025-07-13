@@ -5,7 +5,7 @@ import com.bos.backend.domain.user.entity.UserAuth
 import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.domain.user.repository.UserRepository
-import com.bos.backend.infrastructure.KakaoApiService
+import com.bos.backend.infrastructure.external.KakaoApiService
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
 import org.springframework.stereotype.Component
@@ -20,6 +20,7 @@ class KakaoAuthStrategy(
     override val providerType: ProviderType = ProviderType.KAKAO
 
     override suspend fun signUp(request: SignUpRequestDTO): AuthResult {
+        requireNotNull(request.email) { "Email is required for signup" }
         requireNotNull(request.providerId) { "Provider ID is required for Kakao signup" }
         requireNotNull(request.providerAccessToken) { "Provider access token is required for Kakao signup" }
 
@@ -29,22 +30,20 @@ class KakaoAuthStrategy(
         }
 
         // 이미 가입된 사용자인지 확인
-        if (userAuthRepository.existsByEmail(request.email)) {
+        if (userAuthRepository.findByProviderIdAndProviderType(request.providerId, providerType.value) != null) {
             throw IllegalArgumentException("User already exists with email: ${request.email}")
         }
 
         // 사용자 생성
         val user =
             userRepository.save(
-                User(
-                    allowNotification = false,
-                ),
+                User(nickname = "임시 닉네임", allowNotification = false),
             )
 
         // 인증 정보 저장
         val userAuth =
             userAuthRepository.save(
-                // TODO: providerType에 딸흔 생성 제어 방법 고민
+                // TODO: providerType에 따른 생성 제어 방법 고민
                 UserAuth(
                     userId = user.id!!,
                     _providerType = providerType.value,
@@ -66,7 +65,7 @@ class KakaoAuthStrategy(
         }
 
         val userAuth =
-            userAuthRepository.findByEmailAndProviderType(request.email, providerType.value)
+            userAuthRepository.findByProviderIdAndProviderType(request.providerId, providerType.value)
                 ?: throw IllegalArgumentException("User not found with email: ${request.email}")
 
         val user =
