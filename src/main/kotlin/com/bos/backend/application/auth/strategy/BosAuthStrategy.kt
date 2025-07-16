@@ -29,7 +29,8 @@ class BosAuthStrategy(
         val user =
             userRepository.save(
                 User(
-                    nickname = "닉네임 임시", // TODO: random nickname generator
+                    // TODO: random nickname generator
+                    nickname = "닉네임 임시",
                     allowNotification = false,
                 ),
             )

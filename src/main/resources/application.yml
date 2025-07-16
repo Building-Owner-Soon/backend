@@ -2,9 +2,9 @@ spring:
   application.name: backend
 
   r2dbc:
-    url: r2dbc:mariadb://localhost:13306/bos
-    username: root
-    password: 1234
+    url: ${db-host}
+    username: ${db-user}
+    password: ${db-password}
 
 application:
   jwt:

@@ -13,7 +13,8 @@ data class UserAuth(
     @Column("user_id")
     val userId: Long,
     @Column("provider_type")
-    private val _providerType: String, // TODO: r2dbc가 AttributeConberter 지원하는지 확인 필요
+    // TODO: r2dbc가 AttributeConberter 지원하는지 확인 필요
+    private val _providerType: String,
     @Column("provider_id")
     val providerId: String? = null,
     @Column("email")
