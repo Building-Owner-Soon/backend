@@ -22,9 +22,7 @@ class BosAuthStrategy(
         requireNotNull(request.email) { "Email is required for signup" }
         requireNotNull(request.password) { "Password is required for BOS signup" }
 
-        if (userAuthRepository.existsByEmail(request.email)) {
-            throw IllegalArgumentException("User already exists with email: ${request.email}")
-        }
+        require(!userAuthRepository.existsByEmail(request.email)) { "User already exists with email: ${request.email}" }
 
         val user =
             userRepository.save(
@@ -59,13 +57,9 @@ class BosAuthStrategy(
             userAuthRepository.findByEmailAndProviderType(request.email, providerType.value)
                 ?: throw IllegalArgumentException("User not found with email: ${request.email}")
 
-        if (userAuth.passwordHash != request.password) {
-            throw IllegalArgumentException("Invalid password for user: ${request.email}")
-        }
+        require(userAuth.passwordHash == request.password) { "Invalid password for user: ${request.email}" }
 
-        val user =
-            userRepository.findById(userAuth.userId)
-                ?: throw IllegalStateException("User not found")
+        val user = checkNotNull(userRepository.findById(userAuth.userId)) { "User not found" }
 
         userAuthRepository.updateLastLoginAt(userAuth.id!!)
 

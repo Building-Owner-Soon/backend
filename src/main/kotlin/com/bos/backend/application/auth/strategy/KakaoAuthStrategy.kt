@@ -8,6 +8,7 @@ import com.bos.backend.domain.user.repository.UserRepository
 import com.bos.backend.infrastructure.external.KakaoApiService
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
 
@@ -17,6 +18,7 @@ class KakaoAuthStrategy(
     private val userAuthRepository: UserAuthRepository,
     private val kakaoApiService: KakaoApiService,
 ) : AuthStrategy {
+    private val logger = LoggerFactory.getLogger(KakaoAuthStrategy::class.java)
     override val providerType: ProviderType = ProviderType.KAKAO
 
     override suspend fun signUp(request: SignUpRequestDTO): AuthResult {
@@ -25,13 +27,13 @@ class KakaoAuthStrategy(
         requireNotNull(request.providerAccessToken) { "Provider access token is required for Kakao signup" }
 
         // 카카오 토큰 검증
-        if (!validateProviderToken(request.providerAccessToken, request.providerId, request.email)) {
-            throw IllegalArgumentException("Invalid Kakao token or user info mismatch")
+        require(validateProviderToken(request.providerAccessToken, request.providerId, request.email)) {
+            "Invalid Kakao token or user info mismatch"
         }
 
         // 이미 가입된 사용자인지 확인
-        if (userAuthRepository.findByProviderIdAndProviderType(request.providerId, providerType.value) != null) {
-            throw IllegalArgumentException("User already exists with email: ${request.email}")
+        require(userAuthRepository.findByProviderIdAndProviderType(request.providerId, providerType.value) == null) {
+            "User already exists with email: ${request.email}"
         }
 
         // 사용자 생성
@@ -60,17 +62,15 @@ class KakaoAuthStrategy(
         requireNotNull(request.providerAccessToken) { "Provider access token is required for Kakao signin" }
 
         // 카카오 토큰 검증
-        if (!validateProviderToken(request.providerAccessToken, request.providerId, request.email)) {
-            throw IllegalArgumentException("Invalid Kakao token or user info mismatch")
+        require(validateProviderToken(request.providerAccessToken, request.providerId, request.email)) {
+            "Invalid Kakao token or user info mismatch"
         }
 
         val userAuth =
             userAuthRepository.findByProviderIdAndProviderType(request.providerId, providerType.value)
                 ?: throw IllegalArgumentException("User not found with email: ${request.email}")
 
-        val user =
-            userRepository.findById(userAuth.userId)
-                ?: throw IllegalStateException("User not found")
+        val user = checkNotNull(userRepository.findById(userAuth.userId)) { "User not found" }
 
         // 로그인 시간 업데이트
         userAuthRepository.updateLastLoginAt(userAuth.id!!)
@@ -86,7 +86,8 @@ class KakaoAuthStrategy(
         try {
             val kakaoUserInfo = kakaoApiService.getUserInfo(token)
             kakaoUserInfo.id == providerId && kakaoUserInfo.email == email
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
+            logger.error("Kakao token validation failed: ${e.message}", e)
             false
         }
 }
