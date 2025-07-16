@@ -52,7 +52,7 @@ class KakaoAuthStrategy(
                 ),
             )
 
-        return AuthResult(user, userAuth, isNewUser = true)
+        return AuthResult(user, userAuth)
     }
 
     override suspend fun signIn(request: SignInRequestDTO): AuthResult {

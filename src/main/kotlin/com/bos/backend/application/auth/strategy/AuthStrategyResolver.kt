@@ -7,9 +7,7 @@ import org.springframework.stereotype.Component
 class AuthStrategyResolver(
     private val strategies: List<AuthStrategy>,
 ) {
-    fun resolve(provider: String): AuthStrategy {
-        val providerType = ProviderType.fromValue(provider)
-        return strategies.find { it.providerType == providerType }
+    fun resolve(provider: ProviderType): AuthStrategy =
+        strategies.find { it.providerType == provider }
             ?: throw IllegalArgumentException("Unsupported auth provider: $provider")
-    }
 }

@@ -1,11 +1,12 @@
 package com.bos.backend.presentation.auth.dto
 
+import com.bos.backend.domain.user.enum.ProviderType
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 
 data class SignUpRequestDTO(
     @field:NotBlank
-    val provider: String,
+    val provider: ProviderType,
     @field:Email
     @field:NotBlank
     val email: String,

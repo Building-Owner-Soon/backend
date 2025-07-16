@@ -25,10 +25,4 @@ class AuthController(
     suspend fun signIn(
         @RequestBody signInRequestDTO: SignInRequestDTO,
     ): CommonSignResponseDTO = authService.signIn(signInRequestDTO)
-//
-//    @GetMapping("/me")
-//    @ResponseStatus(HttpStatus.OK)
-//    suspend fun getMe(): MeResponse {
-//        TODO()
-//    }
 }

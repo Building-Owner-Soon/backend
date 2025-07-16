@@ -17,5 +17,4 @@ interface AuthStrategy {
 data class AuthResult(
     val user: User,
     val userAuth: UserAuth,
-    val isNewUser: Boolean = false,
 )
