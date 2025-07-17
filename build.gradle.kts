@@ -66,6 +66,10 @@ dependencies {
     // util
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
+    // zalando
+    implementation("org.zalando:problem-spring-web:0.29.1")
+    implementation("org.zalando:jackson-datatype-problem:0.27.0")
+
     // test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
