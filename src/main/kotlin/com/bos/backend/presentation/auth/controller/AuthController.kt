@@ -76,7 +76,7 @@ class AuthController(
 
     @PostMapping("/auth/password-reset")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Suppress("ReturnCount:w")
+    @Suppress("ReturnCount")
     suspend fun requestResetPassword(passwordResetRequestDTO: PasswordResetRequestDTO): ResponseEntity<Unit> {
         if (passwordResetRequestDTO.email.contains("exceed")) {
             return ResponseEntity
