@@ -44,7 +44,7 @@ jobs:
 
       - name: Rename JAR
         run: |
-          JAR_FILE=$(ls build/libs/*.jar | head -n 1)
+          JAR_FILE=$(find build/libs -type f -name "*.jar" ! -name "*-plain.jar" | head -n 1)
           mv "$JAR_FILE" "build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar"
 
       - name: Upload artifact
