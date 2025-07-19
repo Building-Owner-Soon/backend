@@ -383,7 +383,7 @@ exceptions:
       - "IllegalMonitorStateException"
       - "IndexOutOfBoundsException"
       - "NullPointerException"
-      - "RuntimeException"
+      # - "RuntimeException"
       - "Throwable"
     allowedExceptionNameRegex: "_|(ignore|expected).*"
   TooGenericExceptionThrown:
@@ -405,7 +405,7 @@ naming:
   ConstructorParameterNaming:
     active: true
     parameterPattern: "[a-z][A-Za-z0-9]*"
-    privateParameterPattern: "[a-z][A-Za-z0-9]*"
+    privateParameterPattern: "_?[a-z][A-Za-z0-9]*"
     excludeClassPattern: "$^"
   EnumNaming:
     active: true
@@ -722,7 +722,7 @@ style:
         value: "STOPSHIP:"
       - reason: "Forbidden TODO todo marker in comment, please do the changes."
         value: "TODO:"
-    allowedPatterns: ""
+    allowedPatterns: "TODO:"
   ForbiddenImport:
     active: false
     imports: []

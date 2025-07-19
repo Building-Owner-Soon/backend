@@ -2,14 +2,15 @@ spring:
   application.name: backend
 
   r2dbc:
-    url: r2dbc:h2:mem:///taskdb;DB_CLOSE_DELAY=-1
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: ${db-host}
+    username: ${db-user}
+    password: ${db-password}
 
+application:
+  jwt:
+    secret: ${jwt-secret}
+    access-token-expiration: 21600 # 60 * 60 * 6 (6 hours)
+    refresh-token-expiration: 2592000 # 60 * 60 * 24 * 30 (30 days)
 
 logging:
   level:

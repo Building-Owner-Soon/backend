@@ -27,7 +27,7 @@ ktlint {
     }
 }
 
-group = "club.memoni"
+group = "com.bos"
 version = "0.0.1-SNAPSHOT"
 
 java {
@@ -56,8 +56,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
     // h2
-    implementation("io.r2dbc:r2dbc-h2")
-    implementation("com.h2database:h2")
+    implementation("org.mariadb:r2dbc-mariadb:1.1.4")
+
+    // jwt
+    implementation("io.jsonwebtoken:jjwt-api:${property("JJWT_VERSION")}")
+    implementation("io.jsonwebtoken:jjwt-impl:${property("JJWT_VERSION")}")
+    implementation("io.jsonwebtoken:jjwt-jackson:${property("JJWT_VERSION")}") // JSON 처리
 
     // util
     developmentOnly("org.springframework.boot:spring-boot-devtools")
