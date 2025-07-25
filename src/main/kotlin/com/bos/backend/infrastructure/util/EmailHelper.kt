@@ -10,8 +10,6 @@ class EmailHelper(
     private val mailSender: JavaMailSender,
     @Value("\${spring.mail.username}")
     private val fromEmail: String,
-    @Value("\${spring.mail.password}")
-    private val password: String,
 ) {
     suspend fun sendEmail(
         to: String,
