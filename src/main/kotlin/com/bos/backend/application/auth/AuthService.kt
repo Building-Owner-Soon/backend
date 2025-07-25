@@ -6,6 +6,9 @@ import com.bos.backend.application.service.EmailVerificationService
 import com.bos.backend.application.service.JwtService
 import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
+import com.bos.backend.domain.user.enum.ProviderType
+import com.bos.backend.domain.user.repository.UserAuthRepository
+import com.bos.backend.presentation.auth.dto.CheckEmailResponse
 import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationCheckDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional
 class AuthService(
     private val authStrategyResolver: AuthStrategyResolver,
     private val jwtService: JwtService,
+    private val userAuthRepository: UserAuthRepository,
     private val userTermsAgreementRepository: UserTermAgreementRepository,
     private val emailVerificationService: EmailVerificationService,
     @Value("\${application.jwt.access-token-expiration}") private val accessTokenExpiration: Long,
@@ -83,5 +87,16 @@ class AuthService(
             )
         }
         emailVerificationService.verifyEmail(request.email, request.code)
+    }
+
+    suspend fun isBosEmailUserAbsent(email: String): CheckEmailResponse {
+        val userAuth =
+            userAuthRepository.findByEmailAndProviderType(email, providerType = ProviderType.BOS.value)
+                ?: throw NoSuchElementException("No user found with email: $email")
+        return CheckEmailResponse(
+            email = userAuth.email,
+            isExist = true,
+            provider = userAuth.providerType,
+        )
     }
 }
