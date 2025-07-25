@@ -11,9 +11,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
  * 데이터가 바이트 배열로 저장되어 Redis에서 읽기 어려렵기 때문에 문자열로 변환하여 저장하고 읽기 쉽게 설정
  */
 
-// spring이 이 클래서를 설정 클래스로 인식하고 Bean들을 등록
 @Configuration
 class RedisConfiguration {
+// spring이 이 클래서를 설정 클래스로 인식하고 Bean들을 등록
     // redisTemplate을 spring bean으로 등록하여 다른 클래스에서 @Autowired로 주입받아 사용 가능
     // RedisConnectionFactory를 주입받아 RedisTemplate을 생성하고 설정: reids 서버와의 연결을 관리하는 팩토리로 redis 서버 주소, 포트 , 비밀번호 등 연결 정보 제공
     @Bean
@@ -31,4 +31,4 @@ class RedisConfiguration {
         template.afterPropertiesSet()
         return template
     }
-} 
+}
