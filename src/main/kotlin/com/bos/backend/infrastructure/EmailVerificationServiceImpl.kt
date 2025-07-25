@@ -23,10 +23,10 @@ class EmailVerificationServiceImpl(
     override suspend fun sendVerificationEmail(request: EmailVerificationRequestDTO) {
         emailVerificationCodeStore.deleteVerificationCode(request.email)
         val verificationCode = generateVerificationCode()
-        
+
         emailVerificationCodeStore.saveVerificationCode(request.email, verificationCode)
         val content = EmailTemplate.Verification.CONTENT.replace("{code}", verificationCode)
-        
+
         // 이메일 전송
         emailHelper.sendEmail(
             to = request.email,
@@ -41,7 +41,7 @@ class EmailVerificationServiceImpl(
     ): Boolean {
         val savedCode = emailVerificationCodeStore.getVerificationCode(email)
         val isValid = savedCode != null && savedCode == verificationCode
-        
+
         if (isValid) {
             emailVerificationCodeStore.deleteVerificationCode(email)
         }

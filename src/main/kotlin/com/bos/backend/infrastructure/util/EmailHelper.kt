@@ -13,13 +13,18 @@ class EmailHelper(
     @Value("\${spring.mail.password}")
     private val password: String,
 ) {
-    suspend fun sendEmail(to: String, subject: String, content: String) {
-        val message = SimpleMailMessage().apply {
-            setFrom(fromEmail)
-            setTo(to)
-            setSubject(subject)
-            setText(content)
-        }
+    suspend fun sendEmail(
+        to: String,
+        subject: String,
+        content: String,
+    ) {
+        val message =
+            SimpleMailMessage().apply {
+                setFrom(fromEmail)
+                setTo(to)
+                setSubject(subject)
+                setText(content)
+            }
         mailSender.send(message)
     }
 }

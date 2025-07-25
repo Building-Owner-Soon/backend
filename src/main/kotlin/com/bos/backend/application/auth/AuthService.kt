@@ -6,7 +6,6 @@ import com.bos.backend.application.service.EmailVerificationService
 import com.bos.backend.application.service.JwtService
 import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
-import com.bos.backend.application.auth.AuthErrorCode
 import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationCheckDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
@@ -66,7 +65,7 @@ class AuthService(
                 AuthErrorCode.EMAIL_DUPLICATE.status,
             )
         }
-        
+
         emailVerificationService.sendVerificationEmail(request)
     }
 
