@@ -8,21 +8,18 @@ import org.springframework.stereotype.Component
 @Component
 class EmailHelper(
     private val mailSender: JavaMailSender,
-    @Value("\${spring.mail.username}") private val fromEmail: String,
+    @Value("\${spring.mail.username}")
+    private val fromEmail: String,
+    @Value("\${spring.mail.password}")
+    private val password: String,
 ) {
-    suspend fun sendEmail(
-        to: String,
-        subject: String,
-        content: String,
-    ) {
-        val message =
-            SimpleMailMessage().apply {
-                setFrom(fromEmail)
-                setTo(to)
-                this.subject = subject
-                text = content
-            }
-
+    suspend fun sendEmail(to: String, subject: String, content: String) {
+        val message = SimpleMailMessage().apply {
+            setFrom(fromEmail)
+            setTo(to)
+            setSubject(subject)
+            setText(content)
+        }
         mailSender.send(message)
     }
 }
