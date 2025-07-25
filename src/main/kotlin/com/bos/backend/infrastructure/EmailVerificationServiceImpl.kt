@@ -27,7 +27,6 @@ class EmailVerificationServiceImpl(
         emailVerificationCodeStore.saveVerificationCode(request.email, verificationCode)
         val content = EmailTemplate.Verification.CONTENT.replace("{code}", verificationCode)
 
-        // 이메일 전송
         emailHelper.sendEmail(
             to = request.email,
             subject = EmailTemplate.Verification.SUBJECT,
