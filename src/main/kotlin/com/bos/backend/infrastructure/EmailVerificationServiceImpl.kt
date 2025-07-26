@@ -33,7 +33,7 @@ class EmailVerificationServiceImpl(
                 email = request.email,
                 subject = EmailTemplate.Verification.SUBJECT,
                 content = content,
-            )
+            ),
         )
     }
 
