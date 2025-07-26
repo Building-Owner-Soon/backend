@@ -154,10 +154,6 @@ paths:
         '404':
           description: |-
             해당 이메일로 가입되지 않은 유저가 있는 경우
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/BaseProblemDetails'
   /auth/email-verification:
     post:
       tags:

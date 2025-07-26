@@ -1,13 +1,14 @@
 package com.bos.backend.presentation.auth.controller
 
 import com.bos.backend.application.auth.AuthService
-import com.bos.backend.presentation.auth.dto.CheckEmailResponse
 import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationCheckDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
+import com.bos.backend.presentation.auth.dto.ErrorResponse
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -35,7 +36,13 @@ class AuthController(
     @ResponseStatus(HttpStatus.OK)
     suspend fun checkEmail(
         @RequestParam email: String,
-    ): CheckEmailResponse = authService.isBosEmailUserAbsent(email)
+    ): ResponseEntity<*> =
+        try {
+            ResponseEntity.status(HttpStatus.OK).body(authService.isBosEmailUserAbsent(email))
+        } catch (e: NoSuchElementException) {
+            // TODO: 이메일 로직 논의후 변경
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse("EMAIL_NOT_FOUND"))
+        }
 
     @PostMapping("/auth/email-verification")
     @ResponseStatus(HttpStatus.NO_CONTENT)
