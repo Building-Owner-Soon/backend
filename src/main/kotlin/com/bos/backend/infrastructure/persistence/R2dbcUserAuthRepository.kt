@@ -31,6 +31,13 @@ interface UserAuthCoroutineRepository : CoroutineCrudRepository<UserAuth, Long> 
     suspend fun updateLastLoginAt(
         @Param("id") id: Long,
     ): Int
+
+    @Modifying
+    @Query("UPDATE user_auths SET password = :newPassword WHERE email = :email")
+    suspend fun resetPassword(
+        @Param("email") email: String,
+        @Param("newPassword") newPassword: String,
+    )
 }
 
 @Repository
@@ -53,5 +60,12 @@ class R2dbcUserAuthRepositoryImpl(
 
     override suspend fun updateLastLoginAt(id: Long) {
         coroutineRepository.updateLastLoginAt(id)
+    }
+
+    override suspend fun resetPassword(
+        email: String,
+        newPassword: String,
+    ) {
+        coroutineRepository.resetPassword(email, newPassword)
     }
 }

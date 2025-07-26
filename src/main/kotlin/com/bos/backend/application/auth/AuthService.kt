@@ -8,10 +8,12 @@ import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
 import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
+import com.bos.backend.infrastructure.util.PasswordValidator
 import com.bos.backend.presentation.auth.dto.CheckEmailResponse
 import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationCheckDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
+import com.bos.backend.presentation.auth.dto.PasswordResetRequestDTO
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
 import org.springframework.beans.factory.annotation.Value
@@ -99,5 +101,23 @@ class AuthService(
             isExist = true,
             provider = userAuth.providerType,
         )
+    }
+
+    suspend fun resetPassword(request: PasswordResetRequestDTO) {
+        if (!userAuthRepository.existsByEmail(request.email)) {
+            throw CustomException(
+                AuthErrorCode.USER_NOT_FOUND.name,
+                AuthErrorCode.USER_NOT_FOUND.status,
+            )
+        }
+
+        if (!PasswordValidator.isValidPassword(request.newPassword)) {
+            throw CustomException(
+                AuthErrorCode.PASSWORD_POLICY_VIOLATION.name,
+                AuthErrorCode.PASSWORD_POLICY_VIOLATION.status,
+            )
+        }
+
+        userAuthRepository.resetPassword(request.email, request.newPassword)
     }
 }
