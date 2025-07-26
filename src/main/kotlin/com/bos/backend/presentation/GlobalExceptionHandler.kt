@@ -27,7 +27,7 @@ class GlobalExceptionHandler {
         ResponseEntity(
             ErrorResponse(
                 errorCode = e.errorCode,
-                message = e.errorCode,
+                message = e.message,
             ),
             e.status,
         )

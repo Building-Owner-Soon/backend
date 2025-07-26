@@ -67,10 +67,7 @@ class AuthService(
 
     suspend fun sendVerificationEmail(request: EmailVerificationRequestDTO) {
         if (emailVerificationService.isEmailDuplicated(request.email)) {
-            throw CustomException(
-                AuthErrorCode.EMAIL_DUPLICATE.name,
-                AuthErrorCode.EMAIL_DUPLICATE.status,
-            )
+            throw CustomException(AuthErrorCode.EMAIL_DUPLICATE)
         }
 
         emailVerificationService.sendVerificationEmail(request)
@@ -78,16 +75,10 @@ class AuthService(
 
     suspend fun verifyEmail(request: EmailVerificationCheckDTO) {
         if (emailVerificationService.isVerificationCodeExpired(request.email)) {
-            throw CustomException(
-                AuthErrorCode.EMAIL_VERIFICATION_CODE_EXPIRED.name,
-                AuthErrorCode.EMAIL_VERIFICATION_CODE_EXPIRED.status,
-            )
+            throw CustomException(AuthErrorCode.EMAIL_VERIFICATION_CODE_EXPIRED)
         }
         if (!emailVerificationService.isVerificationCodeMatched(request.email, request.code)) {
-            throw CustomException(
-                AuthErrorCode.EMAIL_VERIFICATION_CODE_MISMATCH.name,
-                AuthErrorCode.EMAIL_VERIFICATION_CODE_MISMATCH.status,
-            )
+            throw CustomException(AuthErrorCode.EMAIL_VERIFICATION_CODE_MISMATCH)
         }
         emailVerificationService.verifyEmail(request.email, request.code)
     }
@@ -105,17 +96,11 @@ class AuthService(
 
     suspend fun resetPassword(request: PasswordResetRequestDTO) {
         if (!userAuthRepository.existsByEmail(request.email)) {
-            throw CustomException(
-                AuthErrorCode.USER_NOT_FOUND.name,
-                AuthErrorCode.USER_NOT_FOUND.status,
-            )
+            throw CustomException(AuthErrorCode.USER_NOT_FOUND)
         }
 
         if (!PasswordValidator.isValidPassword(request.newPassword)) {
-            throw CustomException(
-                AuthErrorCode.PASSWORD_POLICY_VIOLATION.name,
-                AuthErrorCode.PASSWORD_POLICY_VIOLATION.status,
-            )
+            throw CustomException(AuthErrorCode.PASSWORD_POLICY_VIOLATION)
         }
 
         userAuthRepository.resetPassword(request.email, request.newPassword)
