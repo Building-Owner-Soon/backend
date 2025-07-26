@@ -19,14 +19,18 @@ class EmailVerificationEventListener(
 ) {
     private val logger = LoggerFactory.getLogger(EmailVerificationEventListener::class.java)
 
+    companion object {
+        private const val QUEUE_USAGE_SCALE_UP_THRESHOLD = 80
+    }
+
     @EventListener
     @Async
     fun handleEmailVerificationEvent(event: EmailVerificationEvent) {
         val queueSize = emailTaskExecutor.queueSize
         val queueCapacity = emailTaskExecutor.queueCapacity
         val usagePercentage = (queueSize * 100 / queueCapacity)
-
-        if (usagePercentage >= 80) {
+        
+        if (usagePercentage >= QUEUE_USAGE_SCALE_UP_THRESHOLD) {
             logger.warn("Email queue usage is high: $queueSize/$queueCapacity ($usagePercentage%)")
             val currentPoolSize = emailTaskExecutor.corePoolSize
             val maxPoolSize = emailTaskExecutor.maxPoolSize
@@ -47,8 +51,6 @@ class EmailVerificationEventListener(
             logger.error("Email queue/pool full. Email dropped: ${event.email}")
         } catch (e: MailException) {
             logger.error("Mail sending failed: ${event.email}. Error: ${e.message}")
-        } catch (e: Exception) {
-            logger.error("Unexpected error while sending email to: ${event.email}. Error: ${e.message}", e)
         }
     }
 }

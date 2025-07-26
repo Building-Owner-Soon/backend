@@ -8,12 +8,19 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 @Configuration
 @EnableAsync
 class AsyncConfiguration {
+
+    companion object {
+        private const val CORE_POOL_SIZE = 2
+        private const val MAX_POOL_SIZE = 5
+        private const val QUEUE_CAPACITY = 100
+    }
+
     @Bean("emailTaskExecutor")
     fun emailTaskExecutor(): ThreadPoolTaskExecutor {
         val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize = 2
-        executor.maxPoolSize = 5
-        executor.queueCapacity = 100
+        executor.corePoolSize = CORE_POOL_SIZE
+        executor.maxPoolSize = MAX_POOL_SIZE
+        executor.queueCapacity = QUEUE_CAPACITY
         executor.setThreadNamePrefix("email-")
         executor.initialize()
         return executor
