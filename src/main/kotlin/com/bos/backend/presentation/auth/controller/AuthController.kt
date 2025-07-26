@@ -34,13 +34,13 @@ class AuthController(
 
     @GetMapping("/auth/check-email")
     @ResponseStatus(HttpStatus.OK)
+    @Suppress("SwallowedException")
     suspend fun checkEmail(
         @RequestParam email: String,
     ): ResponseEntity<*> =
         try {
             ResponseEntity.status(HttpStatus.OK).body(authService.isBosEmailUserAbsent(email))
         } catch (e: NoSuchElementException) {
-            // TODO: 이메일 로직 논의후 변경
             ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse("EMAIL_NOT_FOUND"))
         }
 

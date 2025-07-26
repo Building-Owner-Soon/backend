@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
+@Suppress("LongParameterList")
 class AuthService(
     private val authStrategyResolver: AuthStrategyResolver,
     private val jwtService: JwtService,
