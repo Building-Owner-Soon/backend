@@ -7,11 +7,6 @@ import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
-/**
- * WebFlux 환경에서 비동기 Redis 작업을 위한 설정
- * ReactiveRedisTemplate을 사용하여 non-blocking I/O 지원
- */
-
 @Configuration
 class RedisConfiguration {
     @Bean("reactiveRedisTemplate")
