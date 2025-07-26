@@ -8,7 +8,6 @@ class CustomException(
     override val message: String,
     val status: HttpStatus = HttpStatus.BAD_REQUEST,
 ) : RuntimeException() {
-    
     constructor(authErrorCode: AuthErrorCode) : this(
         errorCode = authErrorCode.name,
         message = authErrorCode.message,
