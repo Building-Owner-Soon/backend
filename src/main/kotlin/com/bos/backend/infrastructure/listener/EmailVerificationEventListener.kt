@@ -21,6 +21,7 @@ class EmailVerificationEventListener(
 
     companion object {
         private const val QUEUE_USAGE_SCALE_UP_THRESHOLD = 80
+        private const val PERCENTAGE_BASE = 100
     }
 
     @EventListener
@@ -28,14 +29,14 @@ class EmailVerificationEventListener(
     fun handleEmailVerificationEvent(event: EmailVerificationEvent) {
         val queueSize = emailTaskExecutor.queueSize
         val queueCapacity = emailTaskExecutor.queueCapacity
-        val usagePercentage = (queueSize * 100 / queueCapacity)
+        val usagePercentage = (queueSize * PERCENTAGE_BASE / queueCapacity)
 
         if (usagePercentage >= QUEUE_USAGE_SCALE_UP_THRESHOLD) {
             logger.warn("Email queue usage is high: $queueSize/$queueCapacity ($usagePercentage%)")
             val currentPoolSize = emailTaskExecutor.corePoolSize
             val maxPoolSize = emailTaskExecutor.maxPoolSize
             if (currentPoolSize < maxPoolSize) {
-                emailTaskExecutor.setCorePoolSize(currentPoolSize + 1)
+                emailTaskExecutor.corePoolSize = currentPoolSize + 1
                 logger.info("Auto scaled email thread pool: $currentPoolSize → ${currentPoolSize + 1}")
             }
         }
