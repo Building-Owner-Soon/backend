@@ -8,7 +8,6 @@ data class PasswordResetRequestDTO(
     @field:Email
     @field:NotBlank
     val email: String,
-    
     @field:NotBlank
     @field:ValidPassword
     val newPassword: String,

@@ -10,4 +10,4 @@ object PasswordValidator {
 
         return hasUppercase && hasLowercase && hasDigit && hasSpecialChar && isLongEnough
     }
-} 
+}

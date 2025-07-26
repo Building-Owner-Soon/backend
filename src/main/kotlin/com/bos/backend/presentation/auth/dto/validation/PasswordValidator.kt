@@ -4,14 +4,16 @@ import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
 
 class PasswordValidator : ConstraintValidator<ValidPassword, String> {
-
     private lateinit var annotation: ValidPassword
 
     override fun initialize(constraintAnnotation: ValidPassword) {
         this.annotation = constraintAnnotation
     }
 
-    override fun isValid(value: String?, context: ConstraintValidatorContext): Boolean {
+    override fun isValid(
+        value: String?,
+        context: ConstraintValidatorContext,
+    ): Boolean {
         if (value.isNullOrBlank()) return true
 
         val regex = Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@\$!%*#?&])[A-Za-z\\d@\$!%*#?&]{8,}$")
@@ -25,4 +27,4 @@ class PasswordValidator : ConstraintValidator<ValidPassword, String> {
 
         return isValid
     }
-} 
+}
