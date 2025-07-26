@@ -29,7 +29,7 @@ class EmailVerificationEventListener(
         val queueSize = emailTaskExecutor.queueSize
         val queueCapacity = emailTaskExecutor.queueCapacity
         val usagePercentage = (queueSize * 100 / queueCapacity)
-        
+
         if (usagePercentage >= QUEUE_USAGE_SCALE_UP_THRESHOLD) {
             logger.warn("Email queue usage is high: $queueSize/$queueCapacity ($usagePercentage%)")
             val currentPoolSize = emailTaskExecutor.corePoolSize
