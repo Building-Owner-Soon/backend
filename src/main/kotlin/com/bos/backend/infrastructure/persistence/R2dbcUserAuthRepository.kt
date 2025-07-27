@@ -37,7 +37,7 @@ interface UserAuthCoroutineRepository : CoroutineCrudRepository<UserAuth, Long> 
     suspend fun resetPassword(
         @Param("email") email: String,
         @Param("newPassword") newPassword: String,
-    )
+    ): Int
 }
 
 @Repository
