@@ -33,4 +33,4 @@ object ConstraintViolationConstant {
     fun getErrorMessage(validationCode: String): String {
         return ERROR_MESSAGE[validationCode] ?: DEFAULT_ERROR_MESSAGE
     }
-} 
+}
