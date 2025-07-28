@@ -8,10 +8,12 @@ import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
 import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
+import com.bos.backend.infrastructure.util.PasswordValidator
 import com.bos.backend.presentation.auth.dto.CheckEmailResponse
 import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationCheckDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
+import com.bos.backend.presentation.auth.dto.PasswordResetRequestDTO
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
 import org.springframework.beans.factory.annotation.Value
@@ -65,10 +67,7 @@ class AuthService(
 
     suspend fun sendVerificationEmail(request: EmailVerificationRequestDTO) {
         if (emailVerificationService.isEmailDuplicated(request.email)) {
-            throw CustomException(
-                AuthErrorCode.EMAIL_DUPLICATE.name,
-                AuthErrorCode.EMAIL_DUPLICATE.status,
-            )
+            throw CustomException(AuthErrorCode.EMAIL_DUPLICATE)
         }
 
         emailVerificationService.sendVerificationEmail(request)
@@ -76,16 +75,10 @@ class AuthService(
 
     suspend fun verifyEmail(request: EmailVerificationCheckDTO) {
         if (emailVerificationService.isVerificationCodeExpired(request.email)) {
-            throw CustomException(
-                AuthErrorCode.EMAIL_VERIFICATION_CODE_EXPIRED.name,
-                AuthErrorCode.EMAIL_VERIFICATION_CODE_EXPIRED.status,
-            )
+            throw CustomException(AuthErrorCode.EMAIL_VERIFICATION_CODE_EXPIRED)
         }
         if (!emailVerificationService.isVerificationCodeMatched(request.email, request.code)) {
-            throw CustomException(
-                AuthErrorCode.EMAIL_VERIFICATION_CODE_MISMATCH.name,
-                AuthErrorCode.EMAIL_VERIFICATION_CODE_MISMATCH.status,
-            )
+            throw CustomException(AuthErrorCode.EMAIL_VERIFICATION_CODE_MISMATCH)
         }
         emailVerificationService.verifyEmail(request.email, request.code)
     }
@@ -99,5 +92,17 @@ class AuthService(
             isExist = true,
             provider = userAuth.providerType,
         )
+    }
+
+    suspend fun resetPassword(request: PasswordResetRequestDTO) {
+        if (!userAuthRepository.existsByEmail(request.email)) {
+            throw CustomException(AuthErrorCode.USER_NOT_FOUND)
+        }
+
+        if (!PasswordValidator.isValidPassword(request.newPassword)) {
+            throw CustomException(AuthErrorCode.PASSWORD_POLICY_VIOLATION)
+        }
+
+        userAuthRepository.resetPassword(request.email, request.newPassword)
     }
 }

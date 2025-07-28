@@ -18,4 +18,9 @@ interface UserAuthRepository {
     suspend fun existsByEmail(email: String): Boolean
 
     suspend fun updateLastLoginAt(id: Long)
+
+    suspend fun resetPassword(
+        email: String,
+        newPassword: String,
+    )
 }

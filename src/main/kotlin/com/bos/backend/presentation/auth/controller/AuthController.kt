@@ -5,8 +5,10 @@ import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationCheckDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
 import com.bos.backend.presentation.auth.dto.ErrorResponse
+import com.bos.backend.presentation.auth.dto.PasswordResetRequestDTO
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -41,18 +43,24 @@ class AuthController(
         try {
             ResponseEntity.status(HttpStatus.OK).body(authService.isBosEmailUserAbsent(email))
         } catch (e: NoSuchElementException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse("EMAIL_NOT_FOUND"))
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse("EMAIL_NOT_FOUND", "이메일을 찾을 수 없습니다."))
         }
 
     @PostMapping("/auth/email-verification")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun sendVerificationEmail(
-        @RequestBody emailVerificationRequestDTO: EmailVerificationRequestDTO,
+        @Valid @RequestBody emailVerificationRequestDTO: EmailVerificationRequestDTO,
     ) = authService.sendVerificationEmail(emailVerificationRequestDTO)
 
     @PostMapping("/auth/email-verification/verify-code")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun verifyEmail(
-        @RequestBody request: EmailVerificationCheckDTO,
+        @Valid @RequestBody request: EmailVerificationCheckDTO,
     ) = authService.verifyEmail(request)
+
+    @PostMapping("/auth/password-reset")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    suspend fun resetPassword(
+        @Valid @RequestBody request: PasswordResetRequestDTO,
+    ) = authService.resetPassword(request)
 }
