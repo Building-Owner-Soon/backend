@@ -11,7 +11,7 @@ class EmailHelper(
     @Value("\${spring.mail.username}")
     private val fromEmail: String,
 ) {
-    suspend fun sendEmail(
+    fun sendEmail(
         to: String,
         subject: String,
         content: String,
