@@ -1,11 +1,12 @@
 package com.bos.backend.application.auth
 
+import com.bos.backend.application.ErrorCode
 import org.springframework.http.HttpStatus
 
 enum class AuthErrorCode(
-    val message: String,
-    val status: HttpStatus,
-) {
+    override val message: String,
+    override val status: HttpStatus,
+) : ErrorCode {
     EMAIL_DUPLICATE(
         "이미 존재하는 이메일입니다.",
         HttpStatus.CONFLICT,
