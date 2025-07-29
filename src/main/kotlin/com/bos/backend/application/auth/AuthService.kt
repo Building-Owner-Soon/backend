@@ -7,7 +7,7 @@ import com.bos.backend.application.service.EmailVerificationService
 import com.bos.backend.application.service.JwtService
 import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
-import com.bos.backend.domain.user.enum.EmailVerificationPurpose
+import com.bos.backend.domain.user.enum.EmailVerificationType
 import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.infrastructure.util.PasswordValidator
@@ -68,34 +68,36 @@ class AuthService(
     }
 
     suspend fun sendVerificationEmail(request: EmailVerificationRequestDTO) {
-        when (request.purpose) {
-            EmailVerificationPurpose.SIGNUP -> {
+        when (request.type) {
+            EmailVerificationType.SIGNUP -> {
                 if (emailVerificationService.isEmailDuplicated(request.email)) {
                     throw CustomException(AuthErrorCode.EMAIL_DUPLICATE)
                 }
             }
-            EmailVerificationPurpose.PASSWORD_RESET -> {
+            EmailVerificationType.PASSWORD_RESET -> {
                 if (!userAuthRepository.existsByEmail(request.email)) {
                     throw CustomException(AuthErrorCode.USER_NOT_FOUND)
                 }
             }
-            else -> throw CustomException(CommonErrorCode.INVALID_PARAMETER)
         }
-        emailVerificationService.sendVerificationEmail(request.email, request.purpose)
+        emailVerificationService.sendVerificationEmail(request.email, request.type)
     }
 
     suspend fun verifyCode(request: EmailVerificationCheckDTO) {
-        if (emailVerificationService.isVerificationCodeExpired(request.email, request.purpose)) {
+        if (emailVerificationService.isVerificationCodeExpired(request.email, request.type)) {
             throw CustomException(AuthErrorCode.EMAIL_VERIFICATION_CODE_EXPIRED)
         }
-        if (!emailVerificationService.isVerificationCodeMatched(request.email, request.code, request.purpose)) {
+        if (!emailVerificationService.isVerificationCodeMatched(request.email, request.code, request.type)) {
             throw CustomException(AuthErrorCode.EMAIL_VERIFICATION_CODE_MISMATCH)
         }
-        emailVerificationService.verifyCode(request.email, request.code, request.purpose)
+        emailVerificationService.verifyCode(request.email, request.code, request.type)
     }
 
     suspend fun resendVerificationEmail(request: EmailVerificationRequestDTO) {
-        emailVerificationService.sendVerificationEmail(request.email, request.purpose)
+        if (!emailVerificationService.isResendAllowed(request.email, request.type)) {
+            throw CustomException(CommonErrorCode.TOO_MANY_REQUESTS)
+        }
+        emailVerificationService.sendVerificationEmail(request.email, request.type)
     }
 
     suspend fun isBosEmailUserAbsent(email: String): CheckEmailResponse {

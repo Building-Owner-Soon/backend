@@ -12,14 +12,8 @@ class CustomException(
     override val message: String,
     val status: HttpStatus = HttpStatus.BAD_REQUEST,
 ) : RuntimeException() {
-    constructor(errorCode: Enum<*>, message: String, status: HttpStatus) : this(
-        errorCode = errorCode.name,
-        message = message,
-        status = status,
-    )
-
     constructor(errorCode: ErrorCode) : this(
-        errorCode = errorCode::class.simpleName + "." + (errorCode as Enum<*>).name,
+        errorCode = (errorCode as Enum<*>).name,
         message = errorCode.message,
         status = errorCode.status,
     )
@@ -29,5 +23,8 @@ enum class CommonErrorCode(
     override val message: String,
     override val status: HttpStatus = HttpStatus.BAD_REQUEST,
 ) : ErrorCode {
-    INVALID_PARAMETER("유효하지 않은 파라미터입니다."),
+    TOO_MANY_REQUESTS(
+        "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+        HttpStatus.TOO_MANY_REQUESTS,
+    ),
 }

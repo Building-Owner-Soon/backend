@@ -1,29 +1,34 @@
 package com.bos.backend.application.service
 
-import com.bos.backend.domain.user.enum.EmailVerificationPurpose
+import com.bos.backend.domain.user.enum.EmailVerificationType
 
 interface EmailVerificationService {
     suspend fun sendVerificationEmail(
         email: String,
-        purpose: EmailVerificationPurpose,
+        type: EmailVerificationType,
     )
 
     suspend fun verifyCode(
         email: String,
         verificationCode: String,
-        purpose: EmailVerificationPurpose,
+        type: EmailVerificationType,
     ): Boolean
 
     suspend fun isEmailDuplicated(email: String): Boolean
 
     suspend fun isVerificationCodeExpired(
         email: String,
-        purpose: EmailVerificationPurpose,
+        type: EmailVerificationType,
     ): Boolean
 
     suspend fun isVerificationCodeMatched(
         email: String,
         code: String,
-        purpose: EmailVerificationPurpose,
+        type: EmailVerificationType,
+    ): Boolean
+
+    suspend fun isResendAllowed(
+        email: String,
+        type: EmailVerificationType,
     ): Boolean
 }

@@ -1,6 +1,6 @@
 package com.bos.backend.presentation.auth.dto
 
-import com.bos.backend.domain.user.enum.EmailVerificationPurpose
+import com.bos.backend.domain.user.enum.EmailVerificationType
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 
@@ -9,7 +9,7 @@ data class EmailVerificationRequestDTO(
     @field:NotBlank
     val email: String,
     @field:NotBlank
-    val purpose: EmailVerificationPurpose,
+    val type: EmailVerificationType,
 )
 
 data class EmailVerificationCheckDTO(
@@ -19,5 +19,5 @@ data class EmailVerificationCheckDTO(
     @field:NotBlank
     val code: String,
     @field:NotBlank
-    val purpose: EmailVerificationPurpose,
+    val type: EmailVerificationType,
 )

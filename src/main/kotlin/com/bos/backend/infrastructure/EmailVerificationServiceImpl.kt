@@ -1,13 +1,11 @@
 package com.bos.backend.infrastructure
 
 import com.bos.backend.application.service.EmailVerificationService
-import com.bos.backend.domain.user.enum.EmailVerificationPurpose
+import com.bos.backend.domain.user.enum.EmailVerificationType
 import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.infrastructure.event.EmailVerificationEvent
 import com.bos.backend.infrastructure.external.EmailVerificationCodeStore
 import com.bos.backend.infrastructure.template.EmailTemplate
-import com.bos.backend.infrastructure.util.EmailHelper
-import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import java.util.Random
@@ -21,16 +19,17 @@ class EmailVerificationServiceImpl(
     companion object {
         private const val VERIFICATION_CODE_LENGTH = 6
         private const val VERIFICATION_CODE_DIGIT_RANGE = 10
+        private const val RESEND_ALLOWED_TTL_THRESHOLD = 540
     }
 
     override suspend fun sendVerificationEmail(
         email: String,
-        purpose: EmailVerificationPurpose,
+        type: EmailVerificationType,
     ) {
-        emailVerificationCodeStore.deleteVerificationCode(email, purpose.value)
+        emailVerificationCodeStore.deleteVerificationCode(email, type.value)
         val verificationCode = generateVerificationCode()
 
-        emailVerificationCodeStore.saveVerificationCode(email, verificationCode, purpose.value)
+        emailVerificationCodeStore.saveVerificationCode(email, verificationCode, type.value)
         val content = EmailTemplate.Verification.CONTENT.replace("{code}", verificationCode)
 
         applicationEventPublisher.publishEvent(
@@ -45,13 +44,13 @@ class EmailVerificationServiceImpl(
     override suspend fun verifyCode(
         email: String,
         verificationCode: String,
-        purpose: EmailVerificationPurpose,
+        type: EmailVerificationType,
     ): Boolean {
-        val savedCode = emailVerificationCodeStore.getVerificationCode(email, purpose.value)
+        val savedCode = emailVerificationCodeStore.getVerificationCode(email, type.value)
         val isValid = savedCode != null && savedCode == verificationCode
 
         if (isValid) {
-            emailVerificationCodeStore.deleteVerificationCode(email, purpose.value)
+            emailVerificationCodeStore.deleteVerificationCode(email, type.value)
         }
         return isValid
     }
@@ -60,16 +59,29 @@ class EmailVerificationServiceImpl(
 
     override suspend fun isVerificationCodeExpired(
         email: String,
-        purpose: EmailVerificationPurpose,
-    ): Boolean = emailVerificationCodeStore.getVerificationCode(email, purpose.value) == null
+        type: EmailVerificationType,
+    ): Boolean = emailVerificationCodeStore.getVerificationCode(email, type.value) == null
 
     override suspend fun isVerificationCodeMatched(
         email: String,
         code: String,
-        purpose: EmailVerificationPurpose,
+        type: EmailVerificationType,
     ): Boolean {
-        val savedCode = emailVerificationCodeStore.getVerificationCode(email, purpose.value)
+        val savedCode = emailVerificationCodeStore.getVerificationCode(email, type.value)
         return savedCode == code
+    }
+
+    override suspend fun isResendAllowed(
+        email: String,
+        type: EmailVerificationType,
+    ): Boolean {
+        val ttl = emailVerificationCodeStore.getVerificationCodeTtl(email, type.value)
+
+        if (ttl == null || ttl <= -1) {
+            return false
+        }
+
+        return ttl <= RESEND_ALLOWED_TTL_THRESHOLD
     }
 
     private fun generateVerificationCode(): String {
