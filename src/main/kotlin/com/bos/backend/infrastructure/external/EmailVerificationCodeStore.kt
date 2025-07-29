@@ -1,12 +1,16 @@
 package com.bos.backend.infrastructure.external
 
-import org.springframework.data.redis.core.RedisTemplate
+import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.stereotype.Service
 import java.time.Duration
 
 @Service
 class EmailVerificationCodeStore(
-    private val redisTemplate: RedisTemplate<String, String>,
+    @Qualifier("reactiveRedisTemplate")
+    private val redisTemplate: ReactiveRedisTemplate<String, String>,
 ) {
     companion object {
         private const val VERIFICATION_CODE_TTL_MINUTES = 10
@@ -18,22 +22,22 @@ class EmailVerificationCodeStore(
         purpose: String,
     ) {
         val key = "email:verification:$purpose:$email"
-        redisTemplate.opsForValue().set(key, code, Duration.ofMinutes(VERIFICATION_CODE_TTL_MINUTES.toLong()))
+        redisTemplate
+            .opsForValue()
+            .set(key, code, Duration.ofMinutes(VERIFICATION_CODE_TTL_MINUTES.toLong()))
+            .awaitSingle()
     }
 
-    suspend fun getVerificationCode(
-        email: String,
-        purpose: String,
-    ): String? {
+    suspend fun getVerificationCode(email: String, purpose: String): String? {
         val key = "email:verification:$purpose:$email"
-        return redisTemplate.opsForValue().get(key)
+        return redisTemplate
+            .opsForValue()
+            .get(key)
+            .awaitSingleOrNull()
     }
 
-    suspend fun deleteVerificationCode(
-        email: String,
-        purpose: String,
-    ) {
+    suspend fun deleteVerificationCode(email: String, purpose: String) {
         val key = "email:verification:$purpose:$email"
-        redisTemplate.delete(key)
+        redisTemplate.delete(key).awaitSingle()
     }
 }

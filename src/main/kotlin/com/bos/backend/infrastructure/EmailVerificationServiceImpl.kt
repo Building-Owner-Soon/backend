@@ -3,9 +3,12 @@ package com.bos.backend.infrastructure
 import com.bos.backend.application.service.EmailVerificationService
 import com.bos.backend.domain.user.enum.EmailVerificationPurpose
 import com.bos.backend.domain.user.repository.UserAuthRepository
+import com.bos.backend.infrastructure.event.EmailVerificationEvent
 import com.bos.backend.infrastructure.external.EmailVerificationCodeStore
 import com.bos.backend.infrastructure.template.EmailTemplate
 import com.bos.backend.infrastructure.util.EmailHelper
+import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import java.util.Random
 
@@ -13,7 +16,7 @@ import java.util.Random
 class EmailVerificationServiceImpl(
     private val emailVerificationCodeStore: EmailVerificationCodeStore,
     private val userAuthRepository: UserAuthRepository,
-    private val emailHelper: EmailHelper,
+    private val applicationEventPublisher: ApplicationEventPublisher,
 ) : EmailVerificationService {
     companion object {
         private const val VERIFICATION_CODE_LENGTH = 6
@@ -30,10 +33,12 @@ class EmailVerificationServiceImpl(
         emailVerificationCodeStore.saveVerificationCode(email, verificationCode, purpose.value)
         val content = EmailTemplate.Verification.CONTENT.replace("{code}", verificationCode)
 
-        emailHelper.sendEmail(
-            to = email,
-            subject = EmailTemplate.Verification.SUBJECT,
-            content = content,
+        applicationEventPublisher.publishEvent(
+            EmailVerificationEvent(
+                email = email,
+                subject = EmailTemplate.Verification.SUBJECT,
+                content = content,
+            ),
         )
     }
 
