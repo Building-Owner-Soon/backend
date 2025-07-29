@@ -1,6 +1,6 @@
 package com.bos.backend.application.service
 
-import com.bos.backend.domain.user.enum.EmailVerificationType
+import com.bos.backend.domain.auth.enum.EmailVerificationType
 
 interface EmailVerificationService {
     suspend fun sendVerificationEmail(

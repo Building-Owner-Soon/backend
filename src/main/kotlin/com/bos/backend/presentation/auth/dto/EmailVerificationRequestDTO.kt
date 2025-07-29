@@ -1,6 +1,6 @@
 package com.bos.backend.presentation.auth.dto
 
-import com.bos.backend.domain.user.enum.EmailVerificationType
+import com.bos.backend.domain.auth.enum.EmailVerificationType
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 

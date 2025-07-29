@@ -7,7 +7,7 @@ import com.bos.backend.application.service.EmailVerificationService
 import com.bos.backend.application.service.JwtService
 import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
-import com.bos.backend.domain.user.enum.EmailVerificationType
+import com.bos.backend.domain.auth.enum.EmailVerificationType
 import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.infrastructure.util.PasswordValidator
