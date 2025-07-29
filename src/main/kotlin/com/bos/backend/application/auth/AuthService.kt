@@ -79,6 +79,9 @@ class AuthService(
                     throw CustomException(AuthErrorCode.USER_NOT_FOUND)
                 }
             }
+            else -> {
+                throw CustomException(CommonErrorCode.INVALID_PARAMETER)
+            }
         }
         emailVerificationService.sendVerificationEmail(request.email, request.type)
     }
