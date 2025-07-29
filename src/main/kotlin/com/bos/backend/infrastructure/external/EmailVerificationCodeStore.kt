@@ -19,9 +19,9 @@ class EmailVerificationCodeStore(
     suspend fun saveVerificationCode(
         email: String,
         code: String,
-        purpose: String,
+        type: String,
     ) {
-        val key = "email:verification:$purpose:$email"
+        val key = "email:verification:$type:$email"
         redisTemplate
             .opsForValue()
             .set(key, code, Duration.ofMinutes(VERIFICATION_CODE_TTL_MINUTES.toLong()))
@@ -30,9 +30,9 @@ class EmailVerificationCodeStore(
 
     suspend fun getVerificationCode(
         email: String,
-        purpose: String,
+        type: String,
     ): String? {
-        val key = "email:verification:$purpose:$email"
+        val key = "email:verification:$type:$email"
         return redisTemplate
             .opsForValue()
             .get(key)
@@ -41,17 +41,17 @@ class EmailVerificationCodeStore(
 
     suspend fun deleteVerificationCode(
         email: String,
-        purpose: String,
+        type: String,
     ) {
-        val key = "email:verification:$purpose:$email"
+        val key = "email:verification:$type:$email"
         redisTemplate.delete(key).awaitSingle()
     }
 
     suspend fun getVerificationCodeTtl(
         email: String,
-        purpose: String,
+        type: String,
     ): Long? {
-        val key = "email:verification:$purpose:$email"
+        val key = "email:verification:$type:$email"
         return redisTemplate
             .getExpire(key)
             .awaitSingleOrNull()
