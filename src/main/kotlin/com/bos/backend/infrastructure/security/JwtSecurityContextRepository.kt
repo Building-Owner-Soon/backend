@@ -1,5 +1,7 @@
 package com.bos.backend.infrastructure.security
 
+import com.bos.backend.application.CustomException
+import com.bos.backend.application.auth.AuthErrorCode
 import com.bos.backend.application.service.JwtService
 import kotlinx.coroutines.reactor.mono
 import org.springframework.http.HttpHeaders
@@ -28,20 +30,23 @@ class JwtSecurityContextRepository(
     override fun save(
         exchange: ServerWebExchange,
         context: SecurityContext,
-    ): Mono<Void> {
-        return Mono.empty()
-    }
+    ): Mono<Void> = Mono.empty()
 
-    private suspend fun validateTokenAsync(token: String): SecurityContext? {
-        return runCatching {
-            val isValid = jwtService.validateToken(token)
-            if (!isValid) return null
+    private suspend fun validateTokenAsync(token: String): SecurityContext? =
+        runCatching {
+            try {
+                val isValid = jwtService.validateToken(token)
+                if (!isValid) {
+                    throw CustomException(AuthErrorCode.INVALID_TOKEN)
+                }
 
-            val userId = jwtService.getUserIdFromToken(token)
-            val authentication = UsernamePasswordAuthenticationToken(userId.toString(), null, emptyList())
-            SecurityContextImpl(authentication)
+                val userId = jwtService.getUserIdFromToken(token)
+                val authentication = UsernamePasswordAuthenticationToken(userId.toString(), null, emptyList())
+                SecurityContextImpl(authentication)
+            } catch (_: Exception) {
+                throw CustomException(AuthErrorCode.INVALID_TOKEN)
+            }
         }.getOrNull()
-    }
 
     private fun extractToken(request: org.springframework.http.server.reactive.ServerHttpRequest): String? {
         val authHeader = request.headers.getFirst(HttpHeaders.AUTHORIZATION)
