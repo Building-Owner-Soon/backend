@@ -1,11 +1,11 @@
 package com.bos.backend.infrastructure
 
 import com.bos.backend.application.service.JwtService
+import com.bos.backend.infrastructure.config.JwtProperties
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jws
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.Date
@@ -13,10 +13,9 @@ import javax.crypto.SecretKey
 
 @Service
 class JwtServiceImpl(
-    // TODO: ApplicationProperties로 env 관리
-    @Value("\${application.jwt.secret}") private val secret: String,
+    private val jwtProperties: JwtProperties,
 ) : JwtService {
-    private val key: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
+    private val key: SecretKey = Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray())
 
     override fun generateToken(
         userId: String,

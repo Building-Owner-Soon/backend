@@ -17,8 +17,24 @@ import java.time.ZoneOffset
 @Configuration
 @EnableR2dbcRepositories(basePackages = ["com.bos.backend.infrastructure.persistence"])
 class R2dbcConfiguration {
-    // TODO: JPA AttributeConverter와 유사하게 R2DBC에서도 AttributeConverter를 지원하는지 확인 필요
-    // TODO: 동작 원리 디깅
+    /**
+     * R2DBC Custom Conversions Configuration
+     *
+     * Unlike JPA's @AttributeConverter, R2DBC does not have built-in AttributeConverter support.
+     * Custom type conversions are handled through R2dbcCustomConversions and Converter implementations.
+     *
+     * This configuration provides custom converters for:
+     * - Instant <-> LocalDateTime conversion for database compatibility
+     *
+     * For enum type conversions (like ProviderType), manual string conversion is used
+     * in entity classes through getter/setter patterns rather than automatic conversion.
+     *
+     * R2DBC operates differently from JPA:
+     * 1. No automatic entity lifecycle management
+     * 2. No lazy loading
+     * 3. Manual conversion for complex types
+     * 4. Reactive programming model throughout
+     */
     @Bean
     fun r2dbcCustomConversions(databaseClient: DatabaseClient): R2dbcCustomConversions {
         val dialect = DialectResolver.getDialect(databaseClient.connectionFactory)

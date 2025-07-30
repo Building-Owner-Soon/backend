@@ -13,7 +13,8 @@ data class UserAuth(
     @Column("user_id")
     val userId: Long,
     @Column("provider_type")
-    // TODO: r2dbc가 AttributeConberter 지원하는지 확인 필요
+    // R2DBC doesn't have built-in AttributeConverter support like JPA
+    // Manual conversion is used through getter/setter pattern
     private val _providerType: String,
     @Column("provider_id")
     val providerId: String? = null,
@@ -28,4 +29,32 @@ data class UserAuth(
         get() = ProviderType.fromValue(_providerType)
 
     fun updateLastLoginAt(): UserAuth = this.copy(lastLoginAt = Instant.now())
+
+    companion object {
+        fun createForBosProvider(
+            userId: Long,
+            email: String,
+            passwordHash: String,
+        ): UserAuth =
+            UserAuth(
+                userId = userId,
+                _providerType = ProviderType.BOS.value,
+                providerId = null,
+                email = email,
+                passwordHash = passwordHash,
+            )
+
+        fun createForKakaoProvider(
+            userId: Long,
+            providerId: String,
+            email: String,
+        ): UserAuth =
+            UserAuth(
+                userId = userId,
+                _providerType = ProviderType.KAKAO.value,
+                providerId = providerId,
+                email = email,
+                passwordHash = null,
+            )
+    }
 }

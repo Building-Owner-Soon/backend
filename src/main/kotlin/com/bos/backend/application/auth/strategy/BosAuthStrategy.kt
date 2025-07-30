@@ -5,6 +5,7 @@ import com.bos.backend.domain.user.entity.UserAuth
 import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.domain.user.repository.UserRepository
+import com.bos.backend.infrastructure.util.NicknameGenerator
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
 import org.springframework.stereotype.Component
@@ -27,23 +28,17 @@ class BosAuthStrategy(
         val user =
             userRepository.save(
                 User(
-                    // TODO: random nickname generator
-                    nickname = "닉네임 임시",
+                    nickname = NicknameGenerator.generateRandomNickname(),
                     allowNotification = false,
                 ),
             )
 
         val userAuth =
             userAuthRepository.save(
-                // TODO: providerType에 따른 생성 제어 방법 고민
-                UserAuth(
-                    null,
+                UserAuth.createForBosProvider(
                     userId = user.id!!,
-                    _providerType = providerType.value,
                     email = request.email,
                     passwordHash = request.password,
-                    providerId = null,
-                    lastLoginAt = null,
                 ),
             )
 

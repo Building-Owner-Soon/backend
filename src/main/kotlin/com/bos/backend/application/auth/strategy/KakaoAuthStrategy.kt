@@ -6,6 +6,7 @@ import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.domain.user.repository.UserRepository
 import com.bos.backend.infrastructure.external.KakaoApiService
+import com.bos.backend.infrastructure.util.NicknameGenerator
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
 import org.slf4j.LoggerFactory
@@ -39,16 +40,14 @@ class KakaoAuthStrategy(
         // 사용자 생성
         val user =
             userRepository.save(
-                User(nickname = "임시 닉네임", allowNotification = false),
+                User(nickname = NicknameGenerator.generateRandomNickname(), allowNotification = false),
             )
 
         // 인증 정보 저장
         val userAuth =
             userAuthRepository.save(
-                // TODO: providerType에 따른 생성 제어 방법 고민
-                UserAuth(
+                UserAuth.createForKakaoProvider(
                     userId = user.id!!,
-                    _providerType = providerType.value,
                     providerId = request.providerId,
                     email = request.email,
                 ),

@@ -1,5 +1,6 @@
 package com.bos.backend.infrastructure
 
+import com.bos.backend.infrastructure.config.JwtProperties
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -7,7 +8,13 @@ import io.kotest.matchers.shouldNotBe
 class JwtServiceImplTest :
     StringSpec({
         val testKey = "pnu+dnZi2sk3vmtHHt956FDp0dacg5KgzZPb6hRukEo"
-        val sut = JwtServiceImpl(testKey)
+        val jwtProperties =
+            JwtProperties(
+                secret = testKey,
+                accessTokenExpiration = 3600L,
+                refreshTokenExpiration = 7200L,
+            )
+        val sut = JwtServiceImpl(jwtProperties)
 
         "generateToken은 userId와 expirationSeconds를 받아 토큰을 생성한다" {
             val userId = "12345"

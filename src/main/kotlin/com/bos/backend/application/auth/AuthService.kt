@@ -4,10 +4,12 @@ import com.bos.backend.application.CustomException
 import com.bos.backend.application.auth.strategy.AuthStrategyResolver
 import com.bos.backend.application.service.EmailVerificationService
 import com.bos.backend.application.service.JwtService
+import com.bos.backend.application.service.TermsValidationService
 import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
 import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
+import com.bos.backend.infrastructure.config.JwtProperties
 import com.bos.backend.infrastructure.util.PasswordValidator
 import com.bos.backend.presentation.auth.dto.CheckEmailResponse
 import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
@@ -16,7 +18,6 @@ import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
 import com.bos.backend.presentation.auth.dto.PasswordResetRequestDTO
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -29,15 +30,15 @@ class AuthService(
     private val userAuthRepository: UserAuthRepository,
     private val userTermsAgreementRepository: UserTermAgreementRepository,
     private val emailVerificationService: EmailVerificationService,
-    @Value("\${application.jwt.access-token-expiration}") private val accessTokenExpiration: Long,
-    @Value("\${application.jwt.refresh-token-expiration}") private val refreshTokenExpiration: Long,
+    private val termsValidationService: TermsValidationService,
+    private val jwtProperties: JwtProperties,
 ) {
     suspend fun signUp(request: SignUpRequestDTO): CommonSignResponseDTO {
         val strategy = authStrategyResolver.resolve(request.provider)
         val authResult = strategy.signUp(request)
 
         // 약관 동의 저장
-        // TODO: 약관 validation
+        termsValidationService.validateTermsAgreements(request.termsAgreements)
         request.termsAgreements
             .filter { it.isAgree }
             .map {
@@ -49,8 +50,8 @@ class AuthService(
                 userTermsAgreementRepository.saveAll(agreements)
             }
 
-        val accessToken = jwtService.generateToken(authResult.user.id.toString(), accessTokenExpiration)
-        val refreshToken = jwtService.generateToken(authResult.user.id.toString(), refreshTokenExpiration)
+        val accessToken = jwtService.generateToken(authResult.user.id.toString(), jwtProperties.accessTokenExpiration)
+        val refreshToken = jwtService.generateToken(authResult.user.id.toString(), jwtProperties.refreshTokenExpiration)
 
         return CommonSignResponseDTO(accessToken, refreshToken)
     }
@@ -59,8 +60,8 @@ class AuthService(
         val strategy = authStrategyResolver.resolve(request.provider)
         val authResult = strategy.signIn(request)
 
-        val accessToken = jwtService.generateToken(authResult.user.id.toString(), accessTokenExpiration)
-        val refreshToken = jwtService.generateToken(authResult.user.id.toString(), refreshTokenExpiration)
+        val accessToken = jwtService.generateToken(authResult.user.id.toString(), jwtProperties.accessTokenExpiration)
+        val refreshToken = jwtService.generateToken(authResult.user.id.toString(), jwtProperties.refreshTokenExpiration)
 
         return CommonSignResponseDTO(accessToken, refreshToken)
     }
