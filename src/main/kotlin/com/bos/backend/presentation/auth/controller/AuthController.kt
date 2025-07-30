@@ -11,6 +11,7 @@ import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -69,4 +70,10 @@ class AuthController(
     suspend fun resetPassword(
         @Valid @RequestBody request: PasswordResetRequestDTO,
     ) = authService.resetPassword(request)
+
+    @PostMapping("/auth/withdrawal")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    suspend fun withdraw(
+        @AuthenticationPrincipal userId: String,
+    ) = authService.deleteById(userId.toLong())
 }
