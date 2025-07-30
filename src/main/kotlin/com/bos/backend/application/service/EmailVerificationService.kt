@@ -1,21 +1,34 @@
 package com.bos.backend.application.service
 
-import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
+import com.bos.backend.domain.auth.enum.EmailVerificationType
 
 interface EmailVerificationService {
-    suspend fun sendVerificationEmail(request: EmailVerificationRequestDTO)
+    suspend fun sendVerificationEmail(
+        email: String,
+        type: EmailVerificationType,
+    )
 
-    suspend fun verifyEmail(
+    suspend fun verifyCode(
         email: String,
         verificationCode: String,
+        type: EmailVerificationType,
     ): Boolean
 
     suspend fun isEmailDuplicated(email: String): Boolean
 
-    suspend fun isVerificationCodeExpired(email: String): Boolean
+    suspend fun isVerificationCodeExpired(
+        email: String,
+        type: EmailVerificationType,
+    ): Boolean
 
     suspend fun isVerificationCodeMatched(
         email: String,
         code: String,
+        type: EmailVerificationType,
+    ): Boolean
+
+    suspend fun isResendAllowed(
+        email: String,
+        type: EmailVerificationType,
     ): Boolean
 }

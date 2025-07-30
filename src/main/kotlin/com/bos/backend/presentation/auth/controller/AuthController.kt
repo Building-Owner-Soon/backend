@@ -54,9 +54,15 @@ class AuthController(
 
     @PostMapping("/auth/email-verification/verify-code")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    suspend fun verifyEmail(
-        @Valid @RequestBody request: EmailVerificationCheckDTO,
-    ) = authService.verifyEmail(request)
+    suspend fun verifyCode(
+        @Valid @RequestBody emailVerificationCheckDTO: EmailVerificationCheckDTO,
+    ) = authService.verifyCode(emailVerificationCheckDTO)
+
+    @PostMapping("/auth/email-verification/resend")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    suspend fun resendVerificationEmail(
+        @Valid @RequestBody emailVerificationRequestDTO: EmailVerificationRequestDTO,
+    ) = authService.resendVerificationEmail(emailVerificationRequestDTO)
 
     @PostMapping("/auth/password-reset")
     @ResponseStatus(HttpStatus.NO_CONTENT)
