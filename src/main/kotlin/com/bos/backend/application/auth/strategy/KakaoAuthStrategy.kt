@@ -39,7 +39,7 @@ class KakaoAuthStrategy(
         // 사용자 생성
         val user =
             userRepository.save(
-                User(nickname = "임시 닉네임", allowNotification = false),
+                User(nickname = "임시 닉네임", isNotificationAllowed = false),
             )
 
         // 인증 정보 저장

@@ -1,5 +1,9 @@
 package com.bos.backend.infrastructure.config
 
+import com.bos.backend.infrastructure.converter.CharacterComponentsReadingConverter
+import com.bos.backend.infrastructure.converter.CharacterComponentsWritingConverter
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.r2dbc.spi.ConnectionFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
@@ -9,7 +13,9 @@ import org.springframework.data.convert.WritingConverter
 import org.springframework.data.r2dbc.convert.R2dbcCustomConversions
 import org.springframework.data.r2dbc.dialect.DialectResolver
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
+import org.springframework.r2dbc.connection.R2dbcTransactionManager
 import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.transaction.reactive.TransactionalOperator
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -20,7 +26,10 @@ class R2dbcConfiguration {
     // TODO: JPA AttributeConverter와 유사하게 R2DBC에서도 AttributeConverter를 지원하는지 확인 필요
     // TODO: 동작 원리 디깅
     @Bean
-    fun r2dbcCustomConversions(databaseClient: DatabaseClient): R2dbcCustomConversions {
+    fun r2dbcCustomConversions(
+        databaseClient: DatabaseClient,
+        objectMapper: ObjectMapper,
+    ): R2dbcCustomConversions {
         val dialect = DialectResolver.getDialect(databaseClient.connectionFactory)
         val converters = dialect.converters.toMutableList()
         converters.addAll(R2dbcCustomConversions.STORE_CONVERTERS)
@@ -29,8 +38,16 @@ class R2dbcConfiguration {
             listOf(
                 InstantToLocalDateTimeConverter(),
                 LocalDateTimeToInstantConverter(),
+                CharacterComponentsReadingConverter(objectMapper),
+                CharacterComponentsWritingConverter(objectMapper),
             ),
         )
+    }
+
+    @Bean
+    fun transactionalOperator(connectionFactory: ConnectionFactory): TransactionalOperator {
+        val txManager = R2dbcTransactionManager(connectionFactory)
+        return TransactionalOperator.create(txManager)
     }
 }
 

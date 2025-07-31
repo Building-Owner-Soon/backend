@@ -29,7 +29,7 @@ class BosAuthStrategy(
                 User(
                     // TODO: random nickname generator
                     nickname = "닉네임 임시",
-                    allowNotification = false,
+                    isNotificationAllowed = false,
                 ),
             )
 
