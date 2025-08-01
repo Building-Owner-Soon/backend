@@ -27,7 +27,7 @@ class SecurityConfiguration(
                         "/auth/email-verification/**",
                         "/auth/password-reset",
                         "/auth/check-email",
-                        "/api/doc.html",
+                        "/api/**",
                         "/actuator/**",
                     ).permitAll()
                     .anyExchange()
