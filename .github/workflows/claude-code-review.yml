@@ -2,13 +2,12 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened]
     # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    paths:
+      - "src/**/*.kt"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
 
 jobs:
   claude-review:
@@ -42,13 +41,13 @@ jobs:
 
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
+            Please review this pull request focusing ONLY on:
+            - Kotlin coding standards and conventions
+            - DDD (Domain-Driven Design) principles
+            - Spring WebFlux reactive patterns
+            - Critical bugs and security issues
 
-            Be concise and constructive and helpful in your feedback.
+            Keep the review concise and focused on these specific areas only.
 
           # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
           # use_sticky_comment: true
@@ -69,7 +68,7 @@ jobs:
 
           # Optional: Add specific tools for running tests or linting
           allowed_tools: "Bash(./gradlew build),Bash(./gradlew test),Bash(./gradlew detekt),Bash(./gradlew KtlintCheck)"
-
+        timeout-minutes: 30
           # Optional: Skip review for certain conditions
           # if: |
           #   !contains(github.event.pull_request.title, '[skip-review]') &&
