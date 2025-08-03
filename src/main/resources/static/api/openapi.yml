@@ -362,37 +362,37 @@ components:
                   isAgree:
                     type: boolean
                     description: 약관 동의 여부
-    CharacterAsset:
+    ProfileAsset:
       type: object
       properties:
         key:
           type: string
-          description: 캐릭터 컴포넌트의 키
+          description: 프로필 컴포넌트의 키
           example: "FACE_TYPE_1"
         uri:
           type: string
           format: uri
-          description: 캐릭터 컴포넌트의 이미지 URI
+          description: 프로필 컴포넌트의 이미지 URI
           example: "https://example.com/face_type_1.svg"
     CharacterComponents:
       type: object
       properties:
         faceShape:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         hand:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         skinColor:
           type: string
           description: 피부색
           example: #FFDBAC
         frontHair:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         backHair:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         eyes:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         mouth:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
     UpdateUserProfileRequest:
       type: object
       properties:

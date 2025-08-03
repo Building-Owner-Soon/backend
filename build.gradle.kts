@@ -67,6 +67,10 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-impl:${property("JJWT_VERSION")}")
     implementation("io.jsonwebtoken:jjwt-jackson:${property("JJWT_VERSION")}") // JSON 처리
 
+    // aws
+    implementation("software.amazon.awssdk:s3:2.29.39")
+    implementation("software.amazon.awssdk:netty-nio-client:2.29.39")
+
     // util
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
