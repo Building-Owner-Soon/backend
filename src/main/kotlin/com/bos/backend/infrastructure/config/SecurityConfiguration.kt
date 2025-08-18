@@ -13,23 +13,25 @@ class SecurityConfiguration(
     private val jwtSecurityContextRepository: JwtSecurityContextRepository,
 ) {
     @Bean
-    fun securityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
-        return http
+    fun securityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain =
+        http
             .csrf { it.disable() }
             .httpBasic { it.disable() }
             .formLogin { it.disable() }
             .logout { it.disable() }
             .authorizeExchange {
-                it.pathMatchers(
-                    "/auth/sign-up",
-                    "/auth/sign-in",
-                    "/auth/email-verification/**",
-                    "/auth/password-reset",
-                    "/auth/check-email",
-                ).permitAll()
-                    .anyExchange().authenticated()
-            }
-            .securityContextRepository(jwtSecurityContextRepository)
+                it
+                    .pathMatchers(
+                        "/auth/sign-up",
+                        "/auth/sign-in",
+                        "/auth/email-verification/**",
+                        "/auth/password-reset",
+                        "/auth/check-email",
+                        "/api/**",
+                        "/actuator/**",
+                    ).permitAll()
+                    .anyExchange()
+                    .authenticated()
+            }.securityContextRepository(jwtSecurityContextRepository)
             .build()
-    }
 }
