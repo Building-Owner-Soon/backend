@@ -45,6 +45,7 @@ class ProfileService(
         redisTemplate.delete(ETAG_KEY)
     }
 
+    @Suppress("TooGenericExceptionCaught")
     suspend fun getCacheStatus(): Map<String, Any> =
         try {
             val cacheExists = redisTemplate.hasKey(CACHE_KEY)
@@ -78,6 +79,7 @@ class ProfileService(
             null
         }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun setCachedAssets(assets: Map<ProfileAssetType, List<AssetInfo>>) {
         try {
             val jsonString =
