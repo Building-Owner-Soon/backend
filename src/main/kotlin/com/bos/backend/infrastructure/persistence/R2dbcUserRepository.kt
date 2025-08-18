@@ -14,4 +14,10 @@ class R2dbcUserRepositoryImpl(
     override suspend fun save(user: User): User = coroutineRepository.save(user)
 
     override suspend fun findById(id: Long): User? = coroutineRepository.findById(id)
+
+    override suspend fun deleteById(id: Long) {
+        val user = findById(id) ?: return
+        val deletedUser = user.delete()
+        coroutineRepository.save(deletedUser)
+    }
 }

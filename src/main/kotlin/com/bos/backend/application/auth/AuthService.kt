@@ -10,6 +10,7 @@ import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
 import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
+import com.bos.backend.domain.user.repository.UserRepository
 import com.bos.backend.infrastructure.util.PasswordValidator
 import com.bos.backend.presentation.auth.dto.CheckEmailResponse
 import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
@@ -30,6 +31,7 @@ class AuthService(
     private val jwtService: JwtService,
     private val userAuthRepository: UserAuthRepository,
     private val userTermsAgreementRepository: UserTermAgreementRepository,
+    private val userRepository: UserRepository,
     private val emailVerificationService: EmailVerificationService,
     @Value("\${application.jwt.access-token-expiration}") private val accessTokenExpiration: Long,
     @Value("\${application.jwt.refresh-token-expiration}") private val refreshTokenExpiration: Long,
@@ -124,5 +126,14 @@ class AuthService(
         }
 
         userAuthRepository.resetPassword(request.email, request.newPassword)
+    }
+
+    suspend fun deleteById(userId: Long) {
+        val user = userRepository.findById(userId)
+
+        if (user == null || user.isDeleted()) {
+            throw CustomException(AuthErrorCode.USER_NOT_FOUND)
+        }
+        userRepository.deleteById(userId)
     }
 }
