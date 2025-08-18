@@ -9,6 +9,7 @@ info:
 tags:
   - name: auth
   - name: user
+  - name: profile
 paths:
   /auth/sign-in:
     post:
@@ -310,6 +311,56 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/BaseProblemDetails"
+  /profile/assets:
+    get:
+      tags:
+        - profile
+      operationId: getAssets
+      summary: "프로필 에셋 조회"
+      description: |-
+        캐릭터 커스터마이징에 사용할 수 있는 모든 프로필 에셋을 조회합니다.
+        
+        ETag를 지원하여 클라이언트 캐싱을 최적화합니다.
+      parameters:
+        - name: If-None-Match
+          in: header
+          description: 클라이언트가 보유한 ETag 값 (캐싱 목적)
+          required: false
+          schema:
+            type: string
+          example: "profile-v1234567890"
+      responses:
+        "200":
+          description: |-
+            프로필 에셋 목록이 성공적으로 반환됩니다.
+          headers:
+            ETag:
+              description: 응답 데이터의 ETag 값
+              schema:
+                type: string
+            Cache-Control:
+              description: 캐시 제어 헤더
+              schema:
+                type: string
+                example: "max-age=86400, must-revalidate"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileAssetResponse"
+        "304":
+          description: |-
+            Not Modified - 클라이언트가 보유한 데이터가 최신 상태입니다.
+          headers:
+            ETag:
+              description: 응답 데이터의 ETag 값
+              schema:
+                type: string
+            Cache-Control:
+              description: 캐시 제어 헤더
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
 components:
   securitySchemes:
     BearerAuth:
@@ -384,37 +435,37 @@ components:
                   isAgree:
                     type: boolean
                     description: 약관 동의 여부
-    CharacterAsset:
+    ProfileAsset:
       type: object
       properties:
         key:
           type: string
-          description: 캐릭터 컴포넌트의 키
+          description: 프로필 컴포넌트의 키
           example: "FACE_TYPE_1"
         uri:
           type: string
           format: uri
-          description: 캐릭터 컴포넌트의 이미지 URI
+          description: 프로필 컴포넌트의 이미지 URI
           example: "https://example.com/face_type_1.svg"
     CharacterComponents:
       type: object
       properties:
         faceShape:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         hand:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         skinColor:
           type: string
           description: 피부색
           example: #FFDBAC
         frontHair:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         backHair:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         eyes:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
         mouth:
-          $ref: "#/components/schemas/CharacterAsset"
+          $ref: "#/components/schemas/ProfileAsset"
     UpdateUserProfileRequest:
       type: object
       properties:
@@ -682,6 +733,67 @@ components:
           type: string
         relayEmail:
           $ref: "#/components/schemas/Email"
+    ProfileAssetResponse:
+      type: object
+      required:
+        - home
+        - faceShape
+        - hand
+        - frontHair
+        - backHair
+        - eyes
+        - mouth
+      properties:
+        home:
+          type: array
+          description: 홈 타입 에셋 목록
+          items:
+            $ref: "#/components/schemas/Asset"
+        faceShape:
+          type: array
+          description: 얼굴 모양 에셋 목록
+          items:
+            $ref: "#/components/schemas/Asset"
+        hand:
+          type: array
+          description: 손 에셋 목록
+          items:
+            $ref: "#/components/schemas/Asset"
+        frontHair:
+          type: array
+          description: 앞머리 에셋 목록
+          items:
+            $ref: "#/components/schemas/Asset"
+        backHair:
+          type: array
+          description: 뒷머리 에셋 목록
+          items:
+            $ref: "#/components/schemas/Asset"
+        eyes:
+          type: array
+          description: 눈 에셋 목록
+          items:
+            $ref: "#/components/schemas/Asset"
+        mouth:
+          type: array
+          description: 입 에셋 목록
+          items:
+            $ref: "#/components/schemas/Asset"
+    Asset:
+      type: object
+      required:
+        - key
+        - uri
+      properties:
+        key:
+          type: string
+          description: 에셋의 고유 키
+          example: "FACE_TYPE_1"
+        uri:
+          type: string
+          format: uri
+          description: 에셋 이미지의 URI
+          example: "https://example.com/face_type_1.svg"
 
   requestBodies:
     SignUpRequestSpec:

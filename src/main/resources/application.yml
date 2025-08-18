@@ -26,6 +26,11 @@ application:
     access-token-expiration: 21600 # 60 * 60 * 6 (6 hours)
     refresh-token-expiration: 2592000 # 60 * 60 * 24 * 30 (30 days)
 
+app:
+  s3:
+    bucket-name: ${s3-bucket-name}
+    base-url: ${s3-base-url}
+
 logging:
   level:
     org.springframework.data.r2dbc: DEBUG
