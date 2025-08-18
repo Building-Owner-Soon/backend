@@ -4,8 +4,10 @@ import com.bos.backend.application.service.ProfileService
 import com.bos.backend.domain.profile.enums.ProfileAssetType
 import com.bos.backend.presentation.profile.dto.AssetDTO
 import com.bos.backend.presentation.profile.dto.ProfileAssetResponseDTO
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -15,9 +17,20 @@ class ProfileController(
     private val profileService: ProfileService,
 ) {
     @GetMapping("/assets")
-    suspend fun getAssets(): ResponseEntity<ProfileAssetResponseDTO> {
-        val assets = profileService.getAssets()
+    suspend fun getAssets(
+        @RequestHeader(value = "If-None-Match", required = false) ifNoneMatch: String?,
+    ): ResponseEntity<ProfileAssetResponseDTO> {
+        val currentETag = profileService.getCurrentETag()
 
+        if (ifNoneMatch != null && ifNoneMatch == currentETag) {
+            return ResponseEntity
+                .status(HttpStatus.NOT_MODIFIED)
+                .header("ETag", currentETag)
+                .header("Cache-Control", "max-age=86400, must-revalidate")
+                .build()
+        }
+
+        val assets = profileService.getAssets()
         val response =
             ProfileAssetResponseDTO(
                 home = assets[ProfileAssetType.HOME]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
@@ -29,9 +42,12 @@ class ProfileController(
                 mouth = assets[ProfileAssetType.MOUTH]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
             )
 
+        val etag = "\"profile-v${System.currentTimeMillis()}\""
+
         return ResponseEntity
             .ok()
-            .header("Cache-Control", "max-age=604800")
+            .header("ETag", etag)
+            .header("Cache-Control", "max-age=86400, must-revalidate")
             .body(response)
     }
 }
