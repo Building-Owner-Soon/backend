@@ -748,37 +748,107 @@ components:
           type: array
           description: 홈 타입 에셋 목록
           items:
-            $ref: "#/components/schemas/Asset"
+            type: object
+            properties:
+              key:
+                type: string
+                description: 에셋의 고유 키
+                example: "HOME_TYPE_1"
+              uri:
+                type: string
+                format: uri
+                description: 에셋 이미지의 URI
+                example: "https://example.com/home_type_1.svg"
         faceShape:
           type: array
           description: 얼굴 모양 에셋 목록
           items:
-            $ref: "#/components/schemas/Asset"
+            type: object
+            properties:
+              key:
+                type: string
+                description: 에셋의 고유 키
+                example: "FACE_TYPE_1"
+              uri:
+                type: string
+                format: uri
+                description: 에셋 이미지의 URI
+                example: "https://example.com/face_type_1.svg"
         hand:
           type: array
           description: 손 에셋 목록
           items:
-            $ref: "#/components/schemas/Asset"
+            type: object
+            properties:
+              key:
+                type: string
+                description: 에셋의 고유 키
+                example: "HAND_TYPE_1"
+              uri:
+                type: string
+                format: uri
+                description: 에셋 이미지의 URI
+                example: "https://example.com/hand_type_1.svg"
         frontHair:
           type: array
           description: 앞머리 에셋 목록
           items:
-            $ref: "#/components/schemas/Asset"
+            type: object
+            properties:
+              key:
+                type: string
+                description: 에셋의 고유 키
+                example: "BANG_TYPE_1"
+              uri:
+                type: string
+                format: uri
+                description: 에셋 이미지의 URI
+                example: "https://example.com/bang_type_1.svg"
         backHair:
           type: array
           description: 뒷머리 에셋 목록
           items:
-            $ref: "#/components/schemas/Asset"
+            type: object
+            properties:
+              key:
+                type: string
+                description: 에셋의 고유 키
+                example: "BACK_HAIR_TYPE_1"
+              uri:
+                type: string
+                format: uri
+                description: 에셋 이미지의 URI
+                example: "https://example.com/back_hair_type_1.svg"
         eyes:
           type: array
           description: 눈 에셋 목록
           items:
-            $ref: "#/components/schemas/Asset"
+            type: object
+            properties:
+              key:
+                type: string
+                description: 에셋의 고유 키
+                example: "EYES_TYPE_1"
+              uri:
+                type: string
+                format: uri
+                description: 에셋 이미지의 URI
+                example: "https://example.com/eyes_type_1.svg"
         mouth:
           type: array
           description: 입 에셋 목록
           items:
-            $ref: "#/components/schemas/Asset"
+            type: object
+            properties:
+              key:
+                type: string
+                description: 에셋의 고유 키
+                example: "MOUTH_TYPE_1"
+              uri:
+                type: string
+                format: uri
+                description: 에셋 이미지의 URI
+                example: "https://example.com/mouth_type_1.svg"
     Asset:
       type: object
       required:
