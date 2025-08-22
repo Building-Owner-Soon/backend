@@ -34,9 +34,9 @@ class ProfileController(
         val response =
             ProfileAssetResponseDTO(
                 home = assets[ProfileAssetType.HOME]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
-                faceShape = assets[ProfileAssetType.FACE_SHAPE]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
+                faceShape = assets[ProfileAssetType.FACE]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
                 hand = assets[ProfileAssetType.HAND]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
-                frontHair = assets[ProfileAssetType.FRONT_HAIR]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
+                frontHair = assets[ProfileAssetType.BANG]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
                 backHair = assets[ProfileAssetType.BACK_HAIR]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
                 eyes = assets[ProfileAssetType.EYES]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
                 mouth = assets[ProfileAssetType.MOUTH]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),

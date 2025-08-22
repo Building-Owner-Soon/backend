@@ -25,7 +25,7 @@ class AssetService(
             .filter { !it.key().endsWith("/") }
             .map { obj ->
                 val fileName = obj.key().substringAfterLast("/")
-                val key = fileName.substringBeforeLast(".")
+                val key = fileName.substringBeforeLast(".").uppercase().replace('-', '_')
                 val uri = "$baseUrl/${obj.key()}"
 
                 AssetInfo(key = key, uri = uri)

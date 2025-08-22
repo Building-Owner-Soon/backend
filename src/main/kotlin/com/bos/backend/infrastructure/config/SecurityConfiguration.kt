@@ -29,6 +29,7 @@ class SecurityConfiguration(
                         "/auth/check-email",
                         "/api/**",
                         "/actuator/**",
+                        "/admin/**",
                     ).permitAll()
                     .anyExchange()
                     .authenticated()
