@@ -2,9 +2,9 @@ package com.bos.backend.domain.profile.enums
 
 enum class ProfileAssetType {
     HOME,
-    FACE_SHAPE,
+    FACE,
     HAND,
-    FRONT_HAIR,
+    BANG,
     BACK_HAIR,
     EYES,
     MOUTH,
