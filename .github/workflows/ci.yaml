@@ -6,7 +6,6 @@ on:
     branches:
       - master
       - develop
-      - setup/deploy-enhance
   release:
     types:
       - created
