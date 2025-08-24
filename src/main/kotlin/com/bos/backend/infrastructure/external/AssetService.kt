@@ -37,15 +37,17 @@ class AssetService(
     }
 
     private fun generatePresignedUrl(key: String): String {
-        val getObjectRequest = GetObjectRequest.builder()
-            .bucket(bucketName)
-            .key(key)
-            .build()
+        val getObjectRequest =
+            GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build()
 
-        val presignRequest = GetObjectPresignRequest.builder()
-            .signatureDuration(Duration.ofHours(1))
-            .getObjectRequest(getObjectRequest)
-            .build()
+        val presignRequest =
+            GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofHours(1))
+                .getObjectRequest(getObjectRequest)
+                .build()
 
         return s3Presigner.presignGetObject(presignRequest).url().toString()
     }
