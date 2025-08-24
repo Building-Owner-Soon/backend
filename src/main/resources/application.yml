@@ -29,7 +29,6 @@ application:
 app:
   s3:
     bucket-name: ${s3-bucket-name}
-    base-url: ${s3-base-url}
 
 logging:
   level:
@@ -47,6 +46,7 @@ cors:
     - "POST"
     - "PUT"
     - "DELETE"
+    - "PATCH"
   allowed-headers:
     - "*"
 
