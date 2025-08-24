@@ -1,5 +1,6 @@
 package com.bos.backend.application.service
 
+import com.bos.backend.domain.profile.constants.SKIN_COLORS
 import com.bos.backend.domain.profile.enums.ProfileAssetType
 import com.bos.backend.infrastructure.external.AssetInfo
 import com.bos.backend.infrastructure.external.AssetService
@@ -39,6 +40,8 @@ class ProfileService(
     }
 
     suspend fun getCurrentETag(): String? = redisTemplate.opsForValue().get(ETAG_KEY)
+
+    suspend fun getSkinColors(): List<String> = SKIN_COLORS
 
     suspend fun evictCache() {
         redisTemplate.delete(CACHE_KEY)
