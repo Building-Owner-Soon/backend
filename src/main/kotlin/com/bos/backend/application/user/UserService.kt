@@ -30,6 +30,7 @@ class UserService(
         return userMapper.toUserProfileDTO(user)
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     suspend fun updateUserProfile(
         userId: Long,
         updateUserRequestDTO: UpdateUserRequestDTO,
