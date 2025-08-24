@@ -319,7 +319,7 @@ paths:
       summary: "프로필 에셋 조회"
       description: |-
         캐릭터 커스터마이징에 사용할 수 있는 모든 프로필 에셋을 조회합니다.
-        
+
         ETag를 지원하여 클라이언트 캐싱을 최적화합니다.
       parameters:
         - name: If-None-Match
@@ -438,7 +438,7 @@ components:
     ProfileAsset:
       type: object
       properties:
-        key:
+        id:
           type: string
           description: 프로필 컴포넌트의 키
           example: "FACE_TYPE_1"
@@ -447,7 +447,7 @@ components:
           format: uri
           description: 프로필 컴포넌트의 이미지 URI
           example: "https://example.com/face_type_1.svg"
-    CharacterComponents:
+    Character:
       type: object
       properties:
         faceShape:
@@ -466,6 +466,25 @@ components:
           $ref: "#/components/schemas/ProfileAsset"
         mouth:
           $ref: "#/components/schemas/ProfileAsset"
+    UpdateProfileCharacter:
+      type: object
+      properties:
+        faceShape:
+          type: integer
+        hand:
+          type: integer
+        skinColor:
+          type: string
+          description: 피부색
+          example: "#FFDBAC"
+        frontHair:
+          type: integer
+        backHair:
+          type: integer
+        eyes:
+          type: integer
+        mouth:
+          type: integer
     UpdateUserProfileRequest:
       type: object
       properties:
@@ -473,8 +492,8 @@ components:
           type: string
           description: 유저의 닉네임
           example: "홍길동"
-        characterComponents:
-          $ref: "#/components/schemas/CharacterComponents"
+        character:
+          $ref: "#/components/schemas/UpdateProfileCharacter"
         homeType:
           type: string
           example: "HOME_TYPE_1"
@@ -505,8 +524,8 @@ components:
           type: string
           description: 유저의 닉네임
           example: "홍길동"
-        characterComponents:
-          $ref: "#/components/schemas/CharacterComponents"
+        character:
+          $ref: "#/components/schemas/Character"
         homeType:
           type: string
           example: "HOME_TYPE_1"

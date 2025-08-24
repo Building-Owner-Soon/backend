@@ -1,7 +1,7 @@
 package com.bos.backend.infrastructure.config
 
-import com.bos.backend.infrastructure.converter.CharacterComponentsReadingConverter
-import com.bos.backend.infrastructure.converter.CharacterComponentsWritingConverter
+import com.bos.backend.infrastructure.converter.CharacterReadingConverter
+import com.bos.backend.infrastructure.converter.CharacterWritingConverter
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.r2dbc.spi.ConnectionFactory
 import org.springframework.context.annotation.Bean
@@ -38,8 +38,8 @@ class R2dbcConfiguration {
             listOf(
                 InstantToLocalDateTimeConverter(),
                 LocalDateTimeToInstantConverter(),
-                CharacterComponentsReadingConverter(objectMapper),
-                CharacterComponentsWritingConverter(objectMapper),
+                CharacterReadingConverter(objectMapper),
+                CharacterWritingConverter(objectMapper),
             ),
         )
     }

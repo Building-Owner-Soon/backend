@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.9.23"
+    kotlin("kapt") version "1.9.23"
     kotlin("plugin.spring") version "1.9.23"
     id("org.springframework.boot") version "3.4.6"
     id("io.spring.dependency-management") version "1.1.7"
@@ -76,6 +77,11 @@ dependencies {
     // zalando
     implementation("org.zalando:problem-spring-web:0.29.1")
     implementation("org.zalando:jackson-datatype-problem:0.27.0")
+
+    // mapstruct
+    implementation("org.mapstruct:mapstruct:${property("MAPSTRUCT_VERSION")}")
+    kapt("org.mapstruct:mapstruct-processor:${property("MAPSTRUCT_VERSION")}")
+    kaptTest("org.mapstruct:mapstruct-processor:${property("MAPSTRUCT_VERSION")}")
 
     // test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
