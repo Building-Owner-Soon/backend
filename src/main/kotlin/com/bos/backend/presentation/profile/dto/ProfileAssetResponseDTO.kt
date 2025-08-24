@@ -8,6 +8,7 @@ data class ProfileAssetResponseDTO(
     val backHair: List<AssetDTO>,
     val eyes: List<AssetDTO>,
     val mouth: List<AssetDTO>,
+    val skinColor: List<String>,
 )
 
 data class AssetDTO(
