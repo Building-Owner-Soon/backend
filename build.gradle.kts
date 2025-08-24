@@ -6,6 +6,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("org.jlleitschuh.gradle.ktlint") version "12.3.0"
+    id("org.flywaydb.flyway") version "9.22.3"
 }
 
 detekt {
@@ -51,6 +52,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
+    // flyway
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-mysql")
+    implementation("org.mariadb.jdbc:mariadb-java-client")
+
     // kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
@@ -74,10 +80,6 @@ dependencies {
     // util
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
-    // zalando
-    implementation("org.zalando:problem-spring-web:0.29.1")
-    implementation("org.zalando:jackson-datatype-problem:0.27.0")
-
     // mapstruct
     implementation("org.mapstruct:mapstruct:${property("MAPSTRUCT_VERSION")}")
     kapt("org.mapstruct:mapstruct-processor:${property("MAPSTRUCT_VERSION")}")
@@ -94,6 +96,10 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.testcontainers:r2dbc")
+    testImplementation("org.testcontainers:mariadb")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testRuntimeOnly("com.h2database:h2")
+    testRuntimeOnly("io.r2dbc:r2dbc-h2")
 }
 
 dependencyManagement {
@@ -134,6 +140,22 @@ tasks.register<Copy>("copyPrePushHook") {
     doLast {
         file("$rootDir/.git/hooks/pre-push").setExecutable(true)
     }
+}
+
+flyway {
+    // 하이픈이 포함된 환경변수 지원을 위한 헬퍼 함수
+    fun getEnvWithFallback(
+        vararg keys: String,
+        default: String,
+    ): String = keys.firstNotNullOfOrNull { System.getenv(it) } ?: default
+
+    url = getEnvWithFallback("jdbc-url", "JDBC_URL", "jdbc_url", default = "jdbc:h2:mem:testdb")
+    user = getEnvWithFallback("db-user", "DB_USER", "db_user", default = "test")
+    password = getEnvWithFallback("db-password", "DB_PASSWORD", "db_password", default = "test")
+    locations = arrayOf("classpath:db/migration")
+    baselineOnMigrate = true
+    baselineVersion = "1"
+    validateOnMigrate = true
 }
 
 tasks.build {

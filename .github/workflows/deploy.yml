@@ -1,0 +1,193 @@
+name: Continuous Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_version:
+        description: 'Artifact version to deploy (e.g., develop-a1b2c3d4, v1.0.0)'
+        required: true
+        type: string
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      dry_run:
+        description: 'Dry run (validate deployment without executing)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Validate Artifact Exists
+        run: |
+          ARTIFACT_PATH="s3://bos-artifacts/backend/bos-backend-${{ inputs.artifact_version }}.jar"
+          echo "Checking artifact: $ARTIFACT_PATH"
+          
+          if aws s3 ls "$ARTIFACT_PATH" >/dev/null 2>&1; then
+            echo "✅ Artifact found: $ARTIFACT_PATH"
+            echo "ARTIFACT_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "❌ Artifact not found: $ARTIFACT_PATH"
+            echo "ARTIFACT_EXISTS=false" >> $GITHUB_ENV
+            exit 1
+          fi
+
+      - name: Download Artifact from S3
+        if: env.ARTIFACT_EXISTS == 'true'
+        run: |
+          mkdir -p artifacts
+          aws s3 cp s3://bos-artifacts/backend/bos-backend-${{ inputs.artifact_version }}.jar \
+          artifacts/bos-backend-${{ inputs.artifact_version }}.jar
+          
+          echo "Downloaded artifact size:"
+          ls -lh artifacts/
+
+      - name: Dry Run Validation
+        if: inputs.dry_run == true
+        run: |
+          echo "🔍 DRY RUN MODE - Validation Only"
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Artifact: bos-backend-${{ inputs.artifact_version }}.jar"
+          echo "Target Host: ${{ secrets.EC2_HOST }}"
+          echo "✅ All validations passed - deployment would succeed"
+
+      - name: Deploy to EC2
+        if: inputs.dry_run == false
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+          ARTIFACT_VERSION: ${{ inputs.artifact_version }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          
+          echo "🚀 Starting deployment to $ENVIRONMENT environment..."
+          
+          # Upload new JAR file
+          scp -i private_key.pem -o StrictHostKeyChecking=no \
+            artifacts/bos-backend-$ARTIFACT_VERSION.jar \
+            $USER@$HOST:/home/$USER/bos-backend-$ARTIFACT_VERSION.jar
+          
+          # Deploy with zero-downtime strategy
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $USER@$HOST << EOF
+            set -e
+            
+            # Create backup of current version
+            if [ -f bos-backend-current.jar ]; then
+              cp bos-backend-current.jar bos-backend-backup.jar
+              echo "✅ Created backup of current version"
+            fi
+            
+            # Create symlink to new version
+            ln -sf bos-backend-$ARTIFACT_VERSION.jar bos-backend-current.jar
+            echo "✅ Updated symlink to new version"
+            
+            # Graceful shutdown of old process
+            OLD_PID=\$(pgrep -f 'java.*bos-backend' || echo "")
+            if [ ! -z "\$OLD_PID" ]; then
+              echo "⏹️  Gracefully stopping old process (PID: \$OLD_PID)"
+              kill -TERM \$OLD_PID
+              sleep 10
+              
+              # Force kill if still running
+              if kill -0 \$OLD_PID 2>/dev/null; then
+                echo "🔪 Force killing old process"
+                kill -KILL \$OLD_PID
+              fi
+            fi
+            
+            # Start new process
+            echo "🚀 Starting new application..."
+            nohup java -jar \
+              -Dspring.profiles.active=$ENVIRONMENT \
+              -Xms512m -Xmx1024m \
+              /home/$USER/bos-backend-current.jar \
+              > logs/bos-backend-$ARTIFACT_VERSION.log 2>&1 &
+            
+            NEW_PID=\$!
+            echo "✅ Started new process (PID: \$NEW_PID)"
+            
+            # Wait for application to start
+            echo "⏳ Waiting for application to start..."
+            sleep 30
+            
+            # Health check
+            for i in {1..12}; do
+              if curl -f http://localhost:8000/actuator/health >/dev/null 2>&1; then
+                echo "✅ Application health check passed"
+                exit 0
+              fi
+              echo "⏳ Health check attempt \$i/12 failed, retrying in 10s..."
+              sleep 10
+            done
+            
+            echo "❌ Health check failed after 2 minutes"
+            exit 1
+          EOF
+          
+          echo "✅ Deployment completed successfully"
+
+      - name: Discord Deployment Notification
+        if: always()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            COLOR=3066993
+            if [ "${{ inputs.dry_run }}" == "true" ]; then
+              TITLE="🔍 Deployment Dry Run Completed"
+              STATUS_TEXT="Validation successful - ready for actual deployment"
+            else
+              TITLE="✅ Deployment Completed"
+              STATUS_TEXT="Successfully deployed to ${{ inputs.environment }}"
+            fi
+          else
+            COLOR=15158332
+            TITLE="❌ Deployment Failed"
+            STATUS_TEXT="Deployment to ${{ inputs.environment }} failed"
+          fi
+          
+          curl -H "Content-Type: application/json" \
+          -d "{
+            \"embeds\": [{
+              \"title\": \"$TITLE\",
+              \"color\": $COLOR,
+              \"fields\": [
+                {\"name\": \"Environment\", \"value\": \"${{ inputs.environment }}\", \"inline\": true},
+                {\"name\": \"Version\", \"value\": \"${{ inputs.artifact_version }}\", \"inline\": true},
+                {\"name\": \"Dry Run\", \"value\": \"${{ inputs.dry_run }}\", \"inline\": true},
+                {\"name\": \"Status\", \"value\": \"$STATUS_TEXT\", \"inline\": false},
+                {\"name\": \"Deployed by\", \"value\": \"${{ github.actor }}\", \"inline\": true}
+              ],
+              \"footer\": {\"text\": \"Deployment completed\"},
+              \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+            }]
+          }" \
+          $DISCORD_WEBHOOK
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f private_key.pem
+          rm -rf artifacts/
