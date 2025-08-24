@@ -10,8 +10,8 @@ class UserTest :
             User(
                 id = 1L,
                 nickname = "홍길동",
-                profileImageUrl = "https://example/com/image",
-                allowNotification = true,
+                isNotificationAllowed = true,
+                isMarketingAgreed = false,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now(),
                 deletedAt = null,
