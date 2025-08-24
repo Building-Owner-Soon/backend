@@ -38,5 +38,17 @@ logging:
     org.springframework.transaction: DEBUG
     io.r2dbc: DEBUG
 
+cors:
+  allowed-origins:
+    - "http://localhost:3000"
+  allowed-methods:
+    - "HEAD"
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+  allowed-headers:
+    - "*"
+
 server:
   port: 8000
