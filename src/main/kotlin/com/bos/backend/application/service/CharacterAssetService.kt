@@ -23,10 +23,10 @@ class CharacterAssetService(
 
         val assetKey = "${assetType.name}_$id"
         val assetInfo =
-            assetList.find { it.key == assetKey }
-                ?: assetList.find { it.key.endsWith("_$id") }
+            assetList.find { it.id == assetKey }
+                ?: assetList.find { it.id.endsWith("_$id") }
 
-        val assetId = assetInfo?.key ?: "${assetType.name.lowercase()}_$id"
+        val assetId = assetInfo?.id ?: "${assetType.name.lowercase()}_$id"
         val uri =
             assetInfo?.uri ?: run {
                 // TODO: fallback
