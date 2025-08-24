@@ -737,9 +737,9 @@ components:
       type: object
       required:
         - home
-        - faceShape
+        - face
         - hand
-        - frontHair
+        - bang
         - backHair
         - eyes
         - mouth
@@ -760,7 +760,7 @@ components:
                 format: uri
                 description: 에셋 이미지의 URI
                 example: "https://example.com/home_type_1.svg"
-        faceShape:
+        face:
           type: array
           description: 얼굴 모양 에셋 목록
           items:
@@ -790,7 +790,7 @@ components:
                 format: uri
                 description: 에셋 이미지의 URI
                 example: "https://example.com/hand_type_1.svg"
-        frontHair:
+        bang:
           type: array
           description: 앞머리 에셋 목록
           items:
