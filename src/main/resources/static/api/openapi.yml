@@ -470,21 +470,21 @@ components:
       type: object
       properties:
         faceShape:
-          type: integer
+          type: string
         hand:
-          type: integer
+          type: string
         skinColor:
           type: string
           description: 피부색
           example: "#FFDBAC"
         frontHair:
-          type: integer
+          type: string
         backHair:
-          type: integer
+          type: string
         eyes:
-          type: integer
+          type: string
         mouth:
-          type: integer
+          type: string
     UpdateUserProfileRequest:
       type: object
       properties:

@@ -16,22 +16,21 @@ class CharacterAssetService(
     }
 
     suspend fun createCharacterAsset(
-        id: Int,
+        assetId: String,
         assetType: ProfileAssetType,
     ): CharacterAsset {
         val assetList = getAssetsByType(assetType)
 
-        val assetKey = "${assetType.name}_$id"
-        val assetInfo =
-            assetList.find { it.id == assetKey }
-                ?: assetList.find { it.id.endsWith("_$id") }
+        // FACE_TYPE_2 형태의 assetId를 받아서 S3에서 조회할 때 사용할 키로 변환
+        val searchKey = assetId.uppercase()
+        val assetInfo = assetList.find { it.id == searchKey }
 
-        val assetId = assetInfo?.id ?: "${assetType.name.lowercase()}_$id"
         val uri =
             assetInfo?.uri ?: run {
-                // TODO: fallback
+                // fallback: FACE_TYPE_2 → face-type-2로 변환해서 S3 경로 생성
+                val fileName = assetId.lowercase().replace('_', '-')
                 val typePrefix = assetType.name.lowercase().replace('_', '-')
-                "https://bos-assets.s3.ap-northeast-2.amazonaws.com/profile/$typePrefix/$id.svg"
+                "https://bos-assets.s3.ap-northeast-2.amazonaws.com/profile/$typePrefix/$fileName.svg"
             }
 
         return CharacterAsset(id = assetId, uri = URI.create(uri))
