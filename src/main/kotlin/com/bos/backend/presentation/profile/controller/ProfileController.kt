@@ -1,7 +1,6 @@
 package com.bos.backend.presentation.profile.controller
 
 import com.bos.backend.application.service.ProfileService
-import com.bos.backend.domain.profile.constants.SKIN_COLORS
 import com.bos.backend.domain.profile.enums.ProfileAssetType
 import com.bos.backend.presentation.profile.dto.AssetDTO
 import com.bos.backend.presentation.profile.dto.ProfileAssetResponseDTO
@@ -41,7 +40,7 @@ class ProfileController(
                 backHair = assets[ProfileAssetType.BACK_HAIR]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
                 eyes = assets[ProfileAssetType.EYES]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
                 mouth = assets[ProfileAssetType.MOUTH]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
-                skinColor = SKIN_COLORS,
+                skinColor = profileService.getSkinColors(),
             )
 
         val etag = "\"profile-v${System.currentTimeMillis()}\""
