@@ -47,9 +47,9 @@ class UserService(
                     val assets =
                         CharacterAssets(
                             faceShape =
-                                characterDTO.faceShape?.let {
+                                characterDTO.face?.let {
                                     characterAssetService.createCharacterAsset(it, ProfileAssetType.FACE)
-                                } ?: currentCharacter?.faceShape
+                                } ?: currentCharacter?.face
                                     ?: characterAssetService.createCharacterAsset("FACE_TYPE_1", ProfileAssetType.FACE),
                             hand =
                                 characterDTO.hand?.let {
@@ -57,9 +57,9 @@ class UserService(
                                 } ?: currentCharacter?.hand
                                     ?: characterAssetService.createCharacterAsset("HAND_TYPE_1", ProfileAssetType.HAND),
                             frontHair =
-                                characterDTO.frontHair?.let {
+                                characterDTO.bang?.let {
                                     characterAssetService.createCharacterAsset(it, ProfileAssetType.BANG)
-                                } ?: currentCharacter?.frontHair
+                                } ?: currentCharacter?.bang
                                     ?: characterAssetService.createCharacterAsset("BANG_TYPE_1", ProfileAssetType.BANG),
                             backHair =
                                 characterDTO.backHair?.let {

@@ -9,10 +9,10 @@ data class UpdateUserRequestDTO(
 )
 
 data class UpdateCharacterDTO(
-    val faceShape: String? = null,
+    val face: String? = null,
     val hand: String? = null,
     val skinColor: String? = null,
-    val frontHair: String? = null,
+    val bang: String? = null,
     val backHair: String? = null,
     val eyes: String? = null,
     val mouth: String? = null,

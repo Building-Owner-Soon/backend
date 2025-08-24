@@ -450,7 +450,7 @@ components:
     Character:
       type: object
       properties:
-        faceShape:
+        face:
           $ref: "#/components/schemas/ProfileAsset"
         hand:
           $ref: "#/components/schemas/ProfileAsset"
@@ -458,7 +458,7 @@ components:
           type: string
           description: 피부색
           example: #FFDBAC
-        frontHair:
+        bang:
           $ref: "#/components/schemas/ProfileAsset"
         backHair:
           $ref: "#/components/schemas/ProfileAsset"
@@ -469,7 +469,7 @@ components:
     UpdateProfileCharacter:
       type: object
       properties:
-        faceShape:
+        face:
           type: string
         hand:
           type: string
@@ -477,7 +477,7 @@ components:
           type: string
           description: 피부색
           example: "#FFDBAC"
-        frontHair:
+        bang:
           type: string
         backHair:
           type: string

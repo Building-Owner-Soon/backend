@@ -33,13 +33,13 @@ class ProfileController(
         val assets = profileService.getAssets()
         val response =
             ProfileAssetResponseDTO(
-                home = assets[ProfileAssetType.HOME]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
-                face = assets[ProfileAssetType.FACE]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
-                hand = assets[ProfileAssetType.HAND]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
-                bang = assets[ProfileAssetType.BANG]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
-                backHair = assets[ProfileAssetType.BACK_HAIR]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
-                eyes = assets[ProfileAssetType.EYES]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
-                mouth = assets[ProfileAssetType.MOUTH]?.map { AssetDTO(it.key, it.uri) } ?: emptyList(),
+                home = assets[ProfileAssetType.HOME]?.map { AssetDTO(it.id, it.uri) } ?: emptyList(),
+                face = assets[ProfileAssetType.FACE]?.map { AssetDTO(it.id, it.uri) } ?: emptyList(),
+                hand = assets[ProfileAssetType.HAND]?.map { AssetDTO(it.id, it.uri) } ?: emptyList(),
+                bang = assets[ProfileAssetType.BANG]?.map { AssetDTO(it.id, it.uri) } ?: emptyList(),
+                backHair = assets[ProfileAssetType.BACK_HAIR]?.map { AssetDTO(it.id, it.uri) } ?: emptyList(),
+                eyes = assets[ProfileAssetType.EYES]?.map { AssetDTO(it.id, it.uri) } ?: emptyList(),
+                mouth = assets[ProfileAssetType.MOUTH]?.map { AssetDTO(it.id, it.uri) } ?: emptyList(),
                 skinColor = profileService.getSkinColors(),
             )
 
