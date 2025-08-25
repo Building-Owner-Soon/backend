@@ -30,6 +30,7 @@ class UserService(
         return userMapper.toUserProfileDTO(user)
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     suspend fun updateUserProfile(
         userId: Long,
         updateUserRequestDTO: UpdateUserRequestDTO,
@@ -41,43 +42,52 @@ class UserService(
 
             val character =
                 updateUserRequestDTO.character?.let { characterDTO ->
+                    val currentCharacter = user.character
+
+                    // TODO: nullable 처리 로직 개선 필요, 유저 생성시 캐릭터 기본값 설정, 중구난방 DTO 정리 필요
                     val assets =
                         CharacterAssets(
                             faceShape =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.faceShape,
-                                    ProfileAssetType.FACE,
-                                ),
+                                characterDTO.face?.let {
+                                    characterAssetService.createCharacterAsset(it, ProfileAssetType.FACE)
+                                } ?: currentCharacter?.face
+                                    ?: characterAssetService.createCharacterAsset("FACE_TYPE_1", ProfileAssetType.FACE),
                             hand =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.hand,
-                                    ProfileAssetType.HAND,
-                                ),
+                                characterDTO.hand?.let {
+                                    characterAssetService.createCharacterAsset(it, ProfileAssetType.HAND)
+                                } ?: currentCharacter?.hand
+                                    ?: characterAssetService.createCharacterAsset("HAND_TYPE_1", ProfileAssetType.HAND),
                             frontHair =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.frontHair,
-                                    ProfileAssetType.BANG,
-                                ),
+                                characterDTO.bang?.let {
+                                    characterAssetService.createCharacterAsset(it, ProfileAssetType.BANG)
+                                } ?: currentCharacter?.bang
+                                    ?: characterAssetService.createCharacterAsset("BANG_TYPE_1", ProfileAssetType.BANG),
                             backHair =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.backHair,
-                                    ProfileAssetType.BACK_HAIR,
-                                ),
+                                characterDTO.backHair?.let {
+                                    characterAssetService.createCharacterAsset(it, ProfileAssetType.BACK_HAIR)
+                                } ?: currentCharacter?.backHair
+                                    ?: characterAssetService.createCharacterAsset(
+                                        "BACK_HAIR_TYPE_1",
+                                        ProfileAssetType.BACK_HAIR,
+                                    ),
                             eyes =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.eyes,
-                                    ProfileAssetType.EYES,
-                                ),
+                                characterDTO.eyes?.let {
+                                    characterAssetService.createCharacterAsset(it, ProfileAssetType.EYES)
+                                } ?: currentCharacter?.eyes
+                                    ?: characterAssetService.createCharacterAsset("EYES_TYPE_1", ProfileAssetType.EYES),
                             mouth =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.mouth,
-                                    ProfileAssetType.MOUTH,
-                                ),
+                                characterDTO.mouth?.let {
+                                    characterAssetService.createCharacterAsset(it, ProfileAssetType.MOUTH)
+                                } ?: currentCharacter?.mouth
+                                    ?: characterAssetService.createCharacterAsset(
+                                        "MOUTH_TYPE_1",
+                                        ProfileAssetType.MOUTH,
+                                    ),
                         )
 
                     characterMapper.toCharacter(
                         assets = assets,
-                        skinColor = characterDTO.skinColor,
+                        skinColor = characterDTO.skinColor ?: currentCharacter?.skinColor ?: "#FFFFFF",
                     )
                 }
 

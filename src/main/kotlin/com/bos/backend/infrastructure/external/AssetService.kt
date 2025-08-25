@@ -18,21 +18,23 @@ class AssetService(
 ) {
     suspend fun getAssetsByPrefix(prefix: String): List<AssetInfo> {
         val request =
-            ListObjectsV2Request.builder()
+            ListObjectsV2Request
+                .builder()
                 .bucket(bucketName)
                 .prefix(prefix)
                 .build()
 
         val response = s3AsyncClient.listObjectsV2(request).await()
 
-        return response.contents()
+        return response
+            .contents()
             .filter { !it.key().endsWith("/") }
             .map { obj ->
                 val fileName = obj.key().substringAfterLast("/")
                 val key = fileName.substringBeforeLast(".").uppercase().replace('-', '_')
                 val uri = generatePresignedUrl(obj.key())
 
-                AssetInfo(key = key, uri = uri)
+                AssetInfo(id = key, uri = uri)
             }
     }
 
@@ -54,6 +56,6 @@ class AssetService(
 }
 
 data class AssetInfo(
-    val key: String,
+    val id: String,
     val uri: String,
 )
