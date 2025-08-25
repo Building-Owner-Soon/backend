@@ -33,7 +33,6 @@ class AssetService(
                 AssetInfo(id = key, uri = uri)
             }
     }
-
 }
 
 data class AssetInfo(

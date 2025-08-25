@@ -17,5 +17,4 @@ class S3Configuration {
             .httpClient(NettyNioAsyncHttpClient.create())
             .build()
     }
-
 }
