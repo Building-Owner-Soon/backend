@@ -26,7 +26,7 @@ class ProfileController(
             return ResponseEntity
                 .status(HttpStatus.NOT_MODIFIED)
                 .header("ETag", currentETag)
-                .header("Cache-Control", "max-age=86400, must-revalidate")
+                .header("Cache-Control", "max-age=3000, must-revalidate")
                 .build()
         }
 
@@ -48,7 +48,7 @@ class ProfileController(
         return ResponseEntity
             .ok()
             .header("ETag", etag)
-            .header("Cache-Control", "max-age=86400, must-revalidate")
+            .header("Cache-Control", "max-age=3000, must-revalidate")
             .body(response)
     }
 }
