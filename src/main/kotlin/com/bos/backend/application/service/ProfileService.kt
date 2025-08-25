@@ -25,7 +25,7 @@ class ProfileService(
     companion object {
         private const val CACHE_KEY = "profile:assets:all"
         private const val ETAG_KEY = "profile:assets:etag"
-        private val CACHE_TTL = Duration.ofMinutes(50)
+        private val CACHE_TTL = Duration.ofHours(24)
     }
 
     suspend fun getAssets(): Map<ProfileAssetType, List<AssetInfo>> {

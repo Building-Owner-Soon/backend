@@ -6,7 +6,6 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.presigner.S3Presigner
 
 @Configuration
 class S3Configuration {
@@ -19,11 +18,4 @@ class S3Configuration {
             .build()
     }
 
-    @Bean
-    fun s3Presigner(): S3Presigner {
-        return S3Presigner.builder()
-            .region(Region.AP_NORTHEAST_2)
-            .credentialsProvider(DefaultCredentialsProvider.create())
-            .build()
-    }
 }
