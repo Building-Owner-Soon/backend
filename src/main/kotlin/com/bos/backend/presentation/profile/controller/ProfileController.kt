@@ -30,7 +30,7 @@ class ProfileController(
                 .build()
         }
 
-        val assets = profileService.getAssets()
+        val (assets, etag) = profileService.getAssetsWithETag()
         val response =
             ProfileAssetResponseDTO(
                 home = assets[ProfileAssetType.HOME]?.map { AssetDTO(it.id, it.uri) } ?: emptyList(),
@@ -42,8 +42,6 @@ class ProfileController(
                 mouth = assets[ProfileAssetType.MOUTH]?.map { AssetDTO(it.id, it.uri) } ?: emptyList(),
                 skinColor = profileService.getSkinColors(),
             )
-
-        val etag = "\"profile-v${System.currentTimeMillis()}\""
 
         return ResponseEntity
             .ok()

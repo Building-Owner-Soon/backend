@@ -39,6 +39,19 @@ class ProfileService(
         return assets
     }
 
+    suspend fun getAssetsWithETag(): Pair<Map<ProfileAssetType, List<AssetInfo>>, String> {
+        val cachedResult = getCachedAssets()
+        val currentETag = getCurrentETag()
+
+        if (cachedResult != null && currentETag != null) {
+            return cachedResult to currentETag
+        }
+
+        val assets = loadAssetsFromS3()
+        val newETag = setCachedAssetsAndReturnETag(assets)
+        return assets to newETag
+    }
+
     suspend fun getCurrentETag(): String? = redisTemplate.opsForValue().get(ETAG_KEY)
 
     suspend fun getSkinColors(): List<String> = SKIN_COLORS
@@ -84,19 +97,26 @@ class ProfileService(
 
     @Suppress("TooGenericExceptionCaught")
     private fun setCachedAssets(assets: Map<ProfileAssetType, List<AssetInfo>>) {
-        try {
+        setCachedAssetsAndReturnETag(assets)
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun setCachedAssetsAndReturnETag(assets: Map<ProfileAssetType, List<AssetInfo>>): String {
+        val etag = "\"profile-v${System.currentTimeMillis()}\""
+        return try {
             val jsonString =
                 objectMapper.writeValueAsString(
                     assets.mapKeys { it.key.name },
                 )
 
-            val etag = "\"profile-v${System.currentTimeMillis()}\""
-
             val operations = redisTemplate.opsForValue()
             operations.set(CACHE_KEY, jsonString, CACHE_TTL)
             operations.set(ETAG_KEY, etag, CACHE_TTL)
+
+            etag
         } catch (e: Exception) {
             logger.error("Failed to cache assets in Redis", e)
+            etag
         }
     }
 
