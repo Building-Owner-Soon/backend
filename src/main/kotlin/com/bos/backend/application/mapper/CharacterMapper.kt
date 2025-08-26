@@ -18,15 +18,14 @@ class CharacterMapper {
     fun toCharacter(
         assets: CharacterAssets,
         skinColor: String,
-    ): Character {
-        return Character(
-            faceShape = assets.faceShape,
+    ): Character =
+        Character(
+            face = assets.faceShape,
             hand = assets.hand,
             skinColor = skinColor,
-            frontHair = assets.frontHair,
+            bang = assets.frontHair,
             backHair = assets.backHair,
             eyes = assets.eyes,
             mouth = assets.mouth,
         )
-    }
 }

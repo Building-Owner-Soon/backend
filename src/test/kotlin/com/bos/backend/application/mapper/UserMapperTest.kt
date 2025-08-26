@@ -24,10 +24,10 @@ class UserMapperTest :
                     isMarketingAgreed = false,
                     character =
                         Character(
-                            faceShape = CharacterAsset("face_1", URI.create("https://example.com/face.svg")),
+                            face = CharacterAsset("face_1", URI.create("https://example.com/face.svg")),
                             hand = CharacterAsset("hand_1", URI.create("https://example.com/hand.svg")),
                             skinColor = "#FFDBAC",
-                            frontHair =
+                            bang =
                                 CharacterAsset(
                                     "front_hair_1",
                                     URI.create("https://example.com/front_hair.svg"),
@@ -54,7 +54,7 @@ class UserMapperTest :
             result.isNotificationAllowed shouldBe true
             result.isMarketingAgreed shouldBe false
             result.character shouldNotBe null
-            result.character?.faceShape?.id shouldBe "face_1"
+            result.character?.face?.id shouldBe "face_1"
             result.homeType shouldBe "APARTMENT"
             result.createdAt shouldBe user.createdAt
             result.updatedAt shouldBe user.updatedAt
