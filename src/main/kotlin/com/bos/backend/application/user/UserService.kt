@@ -83,8 +83,15 @@ class UserService(
                                         "MOUTH_TYPE_1",
                                         ProfileAssetType.MOUTH,
                                     ),
+                            home =
+                                characterDTO.home?.let {
+                                    characterAssetService.createCharacterAsset(it, ProfileAssetType.HOME)
+                                } ?: currentCharacter?.home
+                                    ?: characterAssetService.createCharacterAsset(
+                                        "HOME_TYPE_1",
+                                        ProfileAssetType.MOUTH,
+                                    ),
                         )
-
                     characterMapper.toCharacter(
                         assets = assets,
                         skinColor = characterDTO.skinColor ?: currentCharacter?.skinColor ?: "#FFFFFF",
@@ -98,7 +105,6 @@ class UserService(
                         isNotificationAllowed = updateUserRequestDTO.isNotificationAllowed,
                         isMarketingAgreed = updateUserRequestDTO.isMarketingAgreed,
                         character = character,
-                        homeType = updateUserRequestDTO.homeType,
                     ).let {
                         userRepository.save(it)
                     }

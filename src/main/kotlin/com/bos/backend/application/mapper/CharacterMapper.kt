@@ -11,6 +11,7 @@ data class CharacterAssets(
     val backHair: CharacterAsset,
     val eyes: CharacterAsset,
     val mouth: CharacterAsset,
+    val home: CharacterAsset,
 )
 
 @Component
@@ -27,5 +28,6 @@ class CharacterMapper {
             backHair = assets.backHair,
             eyes = assets.eyes,
             mouth = assets.mouth,
+            home = assets.home,
         )
 }

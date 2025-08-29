@@ -466,25 +466,36 @@ components:
           $ref: "#/components/schemas/ProfileAsset"
         mouth:
           $ref: "#/components/schemas/ProfileAsset"
+        home:
+          $ref: "#/components/schemas/ProfileAsset"
     UpdateProfileCharacter:
       type: object
       properties:
         face:
           type: string
+          example: "FACE_TYPE_1"
         hand:
           type: string
+          example: "HAND_TYPE_1"
         skinColor:
           type: string
           description: 피부색
           example: "#FFDBAC"
         bang:
           type: string
+          example: "BANG_TYPE_1"
         backHair:
           type: string
+          example: "BACK_HAIR_TYPE_1"
         eyes:
           type: string
+          example: "EYES_TYPE_1"
         mouth:
           type: string
+          example: "MOUTH_TYPE_1"
+        home:
+          type: string
+          example: "HOME_TYPE_1"
     UpdateUserProfileRequest:
       type: object
       properties:
@@ -494,9 +505,6 @@ components:
           example: "홍길동"
         character:
           $ref: "#/components/schemas/UpdateProfileCharacter"
-        homeType:
-          type: string
-          example: "HOME_TYPE_1"
         isNotificationAllowed:
           type: boolean
           description: 유저가 알림을 허용하는지 여부
@@ -511,7 +519,6 @@ components:
         - id
         - nickname
         - characterComponents
-        - homeType
         - isNotificationAllowed
         - isMarketingAgreed
       properties:
@@ -526,9 +533,6 @@ components:
           example: "홍길동"
         character:
           $ref: "#/components/schemas/Character"
-        homeType:
-          type: string
-          example: "HOME_TYPE_1"
         isNotificationAllowed:
           type: boolean
           description: |-

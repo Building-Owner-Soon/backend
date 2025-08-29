@@ -39,8 +39,8 @@ class UserMapperTest :
                                 ),
                             eyes = CharacterAsset("eyes_1", URI.create("https://example.com/eyes.svg")),
                             mouth = CharacterAsset("mouth_1", URI.create("https://example.com/mouth.svg")),
+                            home = CharacterAsset("home_1", URI.create("https://example.com/home.svg")),
                         ),
-                    homeType = "APARTMENT",
                     createdAt = Instant.now(),
                     updatedAt = Instant.now(),
                 )
@@ -55,7 +55,7 @@ class UserMapperTest :
             result.isMarketingAgreed shouldBe false
             result.character shouldNotBe null
             result.character?.face?.id shouldBe "face_1"
-            result.homeType shouldBe "APARTMENT"
+            result.character?.home?.id shouldBe "home_1"
             result.createdAt shouldBe user.createdAt
             result.updatedAt shouldBe user.updatedAt
         }
@@ -69,7 +69,6 @@ class UserMapperTest :
                     isNotificationAllowed = false,
                     isMarketingAgreed = true,
                     character = null,
-                    homeType = null,
                     createdAt = Instant.now(),
                     updatedAt = Instant.now(),
                 )
@@ -81,6 +80,5 @@ class UserMapperTest :
             result.id shouldBe 2L
             result.nickname shouldBe "캐릭터없는유저"
             result.character shouldBe null
-            result.homeType shouldBe null
         }
     })
