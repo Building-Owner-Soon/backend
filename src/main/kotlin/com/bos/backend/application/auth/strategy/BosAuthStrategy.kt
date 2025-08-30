@@ -1,8 +1,10 @@
 package com.bos.backend.application.auth.strategy
 
+import com.bos.backend.application.service.CharacterAssetService
 import com.bos.backend.domain.user.entity.User
 import com.bos.backend.domain.user.entity.UserAuth
 import com.bos.backend.domain.user.enum.ProviderType
+import com.bos.backend.domain.user.factory.CharacterFactory
 import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.domain.user.repository.UserRepository
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
@@ -14,6 +16,7 @@ import java.time.Instant
 class BosAuthStrategy(
     private val userRepository: UserRepository,
     private val userAuthRepository: UserAuthRepository,
+    private val characterAssetService: CharacterAssetService,
 ) : AuthStrategy {
     override val providerType: ProviderType
         get() = ProviderType.BOS
@@ -29,6 +32,7 @@ class BosAuthStrategy(
                 User(
                     // TODO: random nickname generator
                     nickname = "닉네임 임시",
+                    character = CharacterFactory.createDefaultCharacter(characterAssetService),
                     isNotificationAllowed = false,
                 ),
             )

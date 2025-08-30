@@ -12,6 +12,6 @@ data class ProfileAssetResponseDTO(
 )
 
 data class AssetDTO(
-    val key: String,
+    val id: String,
     val uri: String,
 )

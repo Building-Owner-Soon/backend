@@ -47,6 +47,7 @@ cors:
     - "POST"
     - "PUT"
     - "DELETE"
+    - "PATCH"
   allowed-headers:
     - "*"
 
