@@ -7,7 +7,6 @@ data class UserProfileDTO(
     val id: Long,
     val nickname: String,
     val character: Character? = null,
-    val homeType: String? = null,
     val isNotificationAllowed: Boolean,
     val isMarketingAgreed: Boolean,
     val createdAt: Instant,
