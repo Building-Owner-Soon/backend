@@ -16,7 +16,7 @@ data class User(
     @Column("marketing_agreed")
     val isMarketingAgreed: Boolean = false,
     @Column("character_components")
-    val character: Character? = null,
+    val character: Character,
     @Column("created_at")
     val createdAt: Instant = Instant.now(),
     @Column("updated_at")

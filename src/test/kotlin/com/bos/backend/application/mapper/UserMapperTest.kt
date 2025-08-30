@@ -60,15 +60,33 @@ class UserMapperTest :
             result.updatedAt shouldBe user.updatedAt
         }
 
-        "character가 null인 User도 매핑할 수 있어야 한다" {
+        "기본 Character를 가진 User도 매핑할 수 있어야 한다" {
             // given
             val user =
                 User(
                     id = 2L,
-                    nickname = "캐릭터없는유저",
+                    nickname = "기본캐릭터유저",
                     isNotificationAllowed = false,
                     isMarketingAgreed = true,
-                    character = null,
+                    character =
+                        Character(
+                            face = CharacterAsset("FACE_TYPE_1", URI.create("https://example.com/face.svg")),
+                            hand = CharacterAsset("HAND_TYPE_1", URI.create("https://example.com/hand.svg")),
+                            skinColor = "#FFFFFF",
+                            bang =
+                                CharacterAsset(
+                                    "BANG_TYPE_1",
+                                    URI.create("https://example.com/bang.svg"),
+                                ),
+                            backHair =
+                                CharacterAsset(
+                                    "BACK_HAIR_TYPE_1",
+                                    URI.create("https://example.com/back_hair.svg"),
+                                ),
+                            eyes = CharacterAsset("EYES_TYPE_1", URI.create("https://example.com/eyes.svg")),
+                            mouth = CharacterAsset("MOUTH_TYPE_1", URI.create("https://example.com/mouth.svg")),
+                            home = CharacterAsset("HOME_TYPE_1", URI.create("https://example.com/home.svg")),
+                        ),
                     createdAt = Instant.now(),
                     updatedAt = Instant.now(),
                 )
@@ -78,7 +96,9 @@ class UserMapperTest :
 
             // then
             result.id shouldBe 2L
-            result.nickname shouldBe "캐릭터없는유저"
-            result.character shouldBe null
+            result.nickname shouldBe "기본캐릭터유저"
+            result.character shouldNotBe null
+            result.character?.face?.id shouldBe "FACE_TYPE_1"
+            result.character?.skinColor shouldBe "#FFFFFF"
         }
     })

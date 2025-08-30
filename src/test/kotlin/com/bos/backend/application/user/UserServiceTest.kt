@@ -2,9 +2,8 @@ package com.bos.backend.application.user
 
 import com.bos.backend.application.CustomException
 import com.bos.backend.application.auth.AuthErrorCode
-import com.bos.backend.application.mapper.CharacterMapper
+import com.bos.backend.application.builder.CharacterBuilder
 import com.bos.backend.application.mapper.UserMapper
-import com.bos.backend.application.service.CharacterAssetService
 import com.bos.backend.domain.user.entity.UserFixture
 import com.bos.backend.domain.user.repository.UserRepository
 import com.bos.backend.presentation.user.dto.UserProfileDTO
@@ -24,17 +23,14 @@ class UserServiceTest :
         val userRepository = mockk<UserRepository>()
         val transactionalOperator = mockk<TransactionalOperator>()
         val userMapper = mockk<UserMapper>()
-        val characterMapper = mockk<CharacterMapper>()
-
-        val characterAssetService = mockk<CharacterAssetService>()
+        val characterBuilder = mockk<CharacterBuilder>()
 
         val userService =
             UserService(
                 userRepository = userRepository,
                 transactionalOperator = transactionalOperator,
                 userMapper = userMapper,
-                characterMapper = characterMapper,
-                characterAssetService = characterAssetService,
+                characterBuilder = characterBuilder,
             )
 
         describe("getUserProfile") {
