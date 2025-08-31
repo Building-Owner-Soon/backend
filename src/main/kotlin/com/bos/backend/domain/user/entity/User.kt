@@ -49,10 +49,10 @@ data class User(
 
 // TODO: 위치 고민
 data class Character(
-    val faceShape: CharacterAsset,
+    val face: CharacterAsset,
     val hand: CharacterAsset,
     val skinColor: String,
-    val frontHair: CharacterAsset,
+    val bang: CharacterAsset,
     val backHair: CharacterAsset,
     val eyes: CharacterAsset,
     val mouth: CharacterAsset,
