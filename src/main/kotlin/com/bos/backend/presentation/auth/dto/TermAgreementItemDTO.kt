@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull
 
 data class TermAgreementItemDTO(
     @field:NotNull
-    val termId: Long,
+    val id: Long,
     @field:NotNull
     val isAgree: Boolean,
 )

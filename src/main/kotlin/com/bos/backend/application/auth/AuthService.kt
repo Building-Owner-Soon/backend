@@ -44,10 +44,10 @@ class AuthService(
         // TODO: 약관 validation
         request.termsAgreements
             .filter { it.isAgree }
-            .map {
+            .map { term ->
                 UserTermAgreement(
                     userId = authResult.user.id!!,
-                    termsId = it.termId,
+                    termsId = term.id,
                 )
             }.let { agreements ->
                 userTermsAgreementRepository.saveAll(agreements)
