@@ -2,12 +2,10 @@ package com.bos.backend.application.user
 
 import com.bos.backend.application.CustomException
 import com.bos.backend.application.auth.AuthErrorCode
-import com.bos.backend.application.mapper.CharacterMapper
+import com.bos.backend.application.builder.CharacterBuilder
 import com.bos.backend.application.mapper.UserMapper
-import com.bos.backend.application.service.CharacterAssetService
 import com.bos.backend.domain.user.entity.UserFixture
 import com.bos.backend.domain.user.repository.UserRepository
-import com.bos.backend.presentation.user.dto.UpdateUserRequestDTO
 import com.bos.backend.presentation.user.dto.UserProfileDTO
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
@@ -18,7 +16,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.springframework.transaction.reactive.TransactionalOperator
-import org.springframework.transaction.reactive.executeAndAwait
 
 class UserServiceTest :
     DescribeSpec({
@@ -26,17 +23,14 @@ class UserServiceTest :
         val userRepository = mockk<UserRepository>()
         val transactionalOperator = mockk<TransactionalOperator>()
         val userMapper = mockk<UserMapper>()
-        val characterMapper = mockk<CharacterMapper>()
-
-        val characterAssetService = mockk<CharacterAssetService>()
+        val characterBuilder = mockk<CharacterBuilder>()
 
         val userService =
             UserService(
                 userRepository = userRepository,
                 transactionalOperator = transactionalOperator,
                 userMapper = userMapper,
-                characterMapper = characterMapper,
-                characterAssetService = characterAssetService,
+                characterBuilder = characterBuilder,
             )
 
         describe("getUserProfile") {
@@ -48,9 +42,8 @@ class UserServiceTest :
                     val expectedProfileDTO =
                         UserProfileDTO(
                             id = testUser.id!!,
-                            nickname = testUser.nickname!!,
+                            nickname = testUser.nickname,
                             character = testUser.character,
-                            homeType = testUser.homeType,
                             isNotificationAllowed = testUser.isNotificationAllowed,
                             isMarketingAgreed = testUser.isMarketingAgreed,
                             createdAt = testUser.createdAt,
@@ -79,29 +72,7 @@ class UserServiceTest :
                     // when & then
                     shouldThrow<CustomException> {
                         userService.getUserProfile(userId)
-                    }.errorCode shouldBe AuthErrorCode.USER_NOT_FOUND
-
-                    coVerify { userRepository.findById(userId) }
-                }
-            }
-        }
-
-        // updateUserProfile 테스트는 TransactionalOperator 모킹 복잡성으로 인해 통합 테스트에서 처리
-        describe("updateUserProfile") {
-            context("존재하지 않는 유저를 업데이트하려는 경우") {
-                it("NoSuchElementException이 발생해야 한다") {
-                    // given
-                    val userId = 999L
-                    val updateRequest = UpdateUserRequestDTO(nickname = "변경된닉네임")
-                    coEvery { userRepository.findById(userId) } returns null
-                    coEvery { transactionalOperator.executeAndAwait<UserProfileDTO>(any()) } coAnswers {
-                        firstArg<suspend () -> UserProfileDTO>().invoke()
-                    }
-
-                    // when & then
-                    shouldThrow<NoSuchElementException> {
-                        userService.updateUserProfile(userId, updateRequest)
-                    }.message shouldBe "User with ID $userId not found"
+                    }.errorCode shouldBe AuthErrorCode.USER_NOT_FOUND.name
 
                     coVerify { userRepository.findById(userId) }
                 }
