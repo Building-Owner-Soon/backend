@@ -5,6 +5,8 @@ import com.bos.backend.domain.user.entity.UserAuth
 interface UserAuthRepository {
     suspend fun save(userAuth: UserAuth): UserAuth
 
+    suspend fun findByUserId(userId: Long): UserAuth?
+
     suspend fun findByProviderIdAndProviderType(
         providerId: String,
         providerType: String,
