@@ -43,12 +43,12 @@ class JwtSecurityContextRepository(
                 }
 
                 val userId = jwtService.getUserIdFromToken(token)
-                
+
                 val user = userRepository.findById(userId)
                 if (user == null || user.isDeleted()) {
                     throw CustomException(AuthErrorCode.USER_NOT_FOUND)
                 }
-                
+
                 val authentication = UsernamePasswordAuthenticationToken(userId.toString(), null, emptyList())
                 SecurityContextImpl(authentication)
             } catch (_: Exception) {

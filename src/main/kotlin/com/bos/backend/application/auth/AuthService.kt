@@ -78,7 +78,7 @@ class AuthService(
         if (request.type !in EmailVerificationType.entries) {
             throw CustomException(CommonErrorCode.INVALID_PARAMETER)
         }
-        
+
         when (request.type) {
             EmailVerificationType.SIGNUP -> {
                 if (emailVerificationService.isEmailDuplicated(request.email)) {
