@@ -518,6 +518,7 @@ components:
       required:
         - id
         - nickname
+        - email
         - characterComponents
         - isNotificationAllowed
         - isMarketingAgreed
@@ -527,6 +528,8 @@ components:
           format: int64
           description: 유저 아이디
           example: 15423
+        email:
+          $ref: "#/components/schemas/Email"
         nickname:
           type: string
           description: 유저의 닉네임

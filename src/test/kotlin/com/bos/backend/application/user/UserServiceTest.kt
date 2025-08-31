@@ -4,9 +4,11 @@ import com.bos.backend.application.CustomException
 import com.bos.backend.application.auth.AuthErrorCode
 import com.bos.backend.application.builder.CharacterBuilder
 import com.bos.backend.application.mapper.UserMapper
+import com.bos.backend.domain.user.entity.UserAuthFixture
 import com.bos.backend.domain.user.entity.UserFixture
+import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.domain.user.repository.UserRepository
-import com.bos.backend.presentation.user.dto.UserProfileDTO
+import com.bos.backend.presentation.user.dto.UserProfileResponseDTO
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
@@ -24,6 +26,7 @@ class UserServiceTest :
         val transactionalOperator = mockk<TransactionalOperator>()
         val userMapper = mockk<UserMapper>()
         val characterBuilder = mockk<CharacterBuilder>()
+        val userAuthRepository = mockk<UserAuthRepository>()
 
         val userService =
             UserService(
@@ -31,6 +34,7 @@ class UserServiceTest :
                 transactionalOperator = transactionalOperator,
                 userMapper = userMapper,
                 characterBuilder = characterBuilder,
+                userAuthRepository = userAuthRepository,
             )
 
         describe("getUserProfile") {
@@ -39,9 +43,11 @@ class UserServiceTest :
                     // given
                     val userId = 1L
                     val testUser = UserFixture.defaultUserFixture()
+                    val testUserAuth = UserAuthFixture.defaultUserAuthFixture()
                     val expectedProfileDTO =
-                        UserProfileDTO(
+                        UserProfileResponseDTO(
                             id = testUser.id!!,
+                            email = testUserAuth.email,
                             nickname = testUser.nickname,
                             character = testUser.character,
                             isNotificationAllowed = testUser.isNotificationAllowed,
@@ -51,7 +57,8 @@ class UserServiceTest :
                         )
 
                     coEvery { userRepository.findById(userId) } returns testUser
-                    every { userMapper.toUserProfileDTO(testUser) } returns expectedProfileDTO
+                    coEvery { userAuthRepository.findByUserId(userId) } returns testUserAuth
+                    every { userMapper.toUserProfileDTO(testUser, testUserAuth) } returns expectedProfileDTO
 
                     // when
                     val result = userService.getUserProfile(userId)
@@ -59,7 +66,7 @@ class UserServiceTest :
                     // then
                     result shouldBe expectedProfileDTO
                     coVerify { userRepository.findById(userId) }
-                    verify { userMapper.toUserProfileDTO(testUser) }
+                    verify { userMapper.toUserProfileDTO(testUser, testUserAuth) }
                 }
             }
 
