@@ -3,6 +3,7 @@ package com.bos.backend.infrastructure.security
 import com.bos.backend.application.CustomException
 import com.bos.backend.application.auth.AuthErrorCode
 import com.bos.backend.application.service.JwtService
+import com.bos.backend.domain.user.repository.UserRepository
 import kotlinx.coroutines.reactor.mono
 import org.springframework.http.HttpHeaders
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -16,6 +17,7 @@ import reactor.core.publisher.Mono
 @Component
 class JwtSecurityContextRepository(
     private val jwtService: JwtService,
+    private val userRepository: UserRepository,
 ) : ServerSecurityContextRepository {
     override fun load(exchange: ServerWebExchange): Mono<SecurityContext> {
         val token = extractToken(exchange.request) ?: return Mono.empty()
@@ -41,6 +43,12 @@ class JwtSecurityContextRepository(
                 }
 
                 val userId = jwtService.getUserIdFromToken(token)
+                
+                val user = userRepository.findById(userId)
+                if (user == null || user.isDeleted()) {
+                    throw CustomException(AuthErrorCode.USER_NOT_FOUND)
+                }
+                
                 val authentication = UsernamePasswordAuthenticationToken(userId.toString(), null, emptyList())
                 SecurityContextImpl(authentication)
             } catch (_: Exception) {
