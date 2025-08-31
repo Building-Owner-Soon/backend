@@ -420,15 +420,15 @@ components:
             termsAgreements:
               description: |-
                 유저의 약관 동의 정보
-                약관 동의는 `termsAgreements` 에서 `termId` 와 `isAgree` 를 통해 약관 동의 여부를 나타냅니다.
+                약관 동의는 `termsAgreements` 에서 `id` 와 `isAgree` 를 통해 약관 동의 여부를 나타냅니다.
               type: array
               items:
                 type: object
                 required:
-                  - termId
+                  - id
                   - isAgree
                 properties:
-                  termId:
+                  id:
                     type: integer
                     format: int64
                     description: 약관 아이디
