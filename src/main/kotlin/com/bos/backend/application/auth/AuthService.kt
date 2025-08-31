@@ -63,13 +63,22 @@ class AuthService(
         val strategy = authStrategyResolver.resolve(request.provider)
         val authResult = strategy.signIn(request)
 
+        if (authResult.user.isDeleted()) {
+            throw CustomException(AuthErrorCode.USER_NOT_FOUND)
+        }
+
         val accessToken = jwtService.generateToken(authResult.user.id.toString(), accessTokenExpiration)
         val refreshToken = jwtService.generateToken(authResult.user.id.toString(), refreshTokenExpiration)
 
         return CommonSignResponseDTO(accessToken, refreshToken)
     }
 
+    @Suppress("ThrowsCount")
     suspend fun sendVerificationEmail(request: EmailVerificationRequestDTO) {
+        if (request.type !in EmailVerificationType.entries) {
+            throw CustomException(CommonErrorCode.INVALID_PARAMETER)
+        }
+
         when (request.type) {
             EmailVerificationType.SIGNUP -> {
                 if (emailVerificationService.isEmailDuplicated(request.email)) {
@@ -80,9 +89,6 @@ class AuthService(
                 if (!userAuthRepository.existsByEmail(request.email)) {
                     throw CustomException(AuthErrorCode.USER_NOT_FOUND)
                 }
-            }
-            else -> {
-                throw CustomException(CommonErrorCode.INVALID_PARAMETER)
             }
         }
         emailVerificationService.sendVerificationEmail(request.email, request.type)
@@ -108,7 +114,13 @@ class AuthService(
     suspend fun isBosEmailUserAbsent(email: String): CheckEmailResponse {
         val userAuth =
             userAuthRepository.findByEmailAndProviderType(email, providerType = ProviderType.BOS.value)
-                ?: throw NoSuchElementException("No user found with email: $email")
+
+        val user = userAuth?.let { userRepository.findById(it.userId) }
+
+        if (userAuth == null || user == null || user.isDeleted()) {
+            throw CustomException(AuthErrorCode.USER_NOT_FOUND)
+        }
+
         return CheckEmailResponse(
             email = userAuth.email,
             isExist = true,
