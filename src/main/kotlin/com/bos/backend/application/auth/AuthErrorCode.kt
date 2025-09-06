@@ -27,6 +27,10 @@ enum class AuthErrorCode(
         "사용자를 찾을 수 없습니다.",
         HttpStatus.BAD_REQUEST,
     ),
+    USERAUTH_NOT_FOUND(
+        "사용자 인증 정보를 찾을 수 없습니다.",
+        HttpStatus.BAD_REQUEST,
+    ),
     INVALID_TOKEN(
         "유효하지 않은 토큰입니다.",
         HttpStatus.UNAUTHORIZED,

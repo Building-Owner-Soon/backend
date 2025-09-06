@@ -3,6 +3,7 @@ package com.bos.backend.application.mapper
 import com.bos.backend.domain.user.entity.Character
 import com.bos.backend.domain.user.entity.CharacterAsset
 import com.bos.backend.domain.user.entity.User
+import com.bos.backend.domain.user.entity.UserAuthFixture
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -44,9 +45,10 @@ class UserMapperTest :
                     createdAt = Instant.now(),
                     updatedAt = Instant.now(),
                 )
+            val userAuth = UserAuthFixture.defaultUserAuthFixture()
 
             // when
-            val result = userMapper.toUserProfileDTO(user)
+            val result = userMapper.toUserProfileDTO(user, userAuth)
 
             // then
             result.id shouldBe 1L
@@ -90,9 +92,9 @@ class UserMapperTest :
                     createdAt = Instant.now(),
                     updatedAt = Instant.now(),
                 )
-
+            val userAuth = UserAuthFixture.defaultUserAuthFixture()
             // when
-            val result = userMapper.toUserProfileDTO(user)
+            val result = userMapper.toUserProfileDTO(user, userAuth)
 
             // then
             result.id shouldBe 2L

@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 interface UserAuthCoroutineRepository : CoroutineCrudRepository<UserAuth, Long> {
+    suspend fun findByUserId(userId: Long): UserAuth?
+
     @Query("SELECT * FROM user_auths WHERE provider_id = :providerId AND provider_type = :providerType")
     suspend fun findByProviderIdAndProviderType(
         @Param("providerId") providerId: String,
@@ -45,6 +47,8 @@ class R2dbcUserAuthRepositoryImpl(
     private val coroutineRepository: UserAuthCoroutineRepository,
 ) : UserAuthRepository {
     override suspend fun save(userAuth: UserAuth): UserAuth = coroutineRepository.save(userAuth)
+
+    override suspend fun findByUserId(userId: Long): UserAuth? = coroutineRepository.findByUserId(userId)
 
     override suspend fun findByProviderIdAndProviderType(
         providerId: String,
