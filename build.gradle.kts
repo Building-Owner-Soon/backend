@@ -1,3 +1,10 @@
+buildscript {
+    dependencies {
+        classpath("org.mariadb.jdbc:mariadb-java-client:3.4.1")
+        classpath("org.flywaydb:flyway-mysql:9.22.3")
+    }
+}
+
 plugins {
     kotlin("jvm") version "1.9.23"
     kotlin("kapt") version "1.9.23"
@@ -152,6 +159,7 @@ flyway {
     url = getEnvWithFallback("jdbc-url", "JDBC_URL", "jdbc_url", default = "jdbc:h2:mem:testdb")
     user = getEnvWithFallback("db-user", "DB_USER", "db_user", default = "test")
     password = getEnvWithFallback("db-password", "DB_PASSWORD", "db_password", default = "test")
+    driver = "org.mariadb.jdbc.Driver"
     locations = arrayOf("classpath:db/migration")
     baselineOnMigrate = true
     baselineVersion = "1"
