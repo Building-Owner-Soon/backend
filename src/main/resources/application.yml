@@ -4,6 +4,14 @@ spring:
     url: ${db-host}
     username: ${db-user}
     password: ${db-password}
+  datasource:
+    url: ${jdbc-url:jdbc:mariadb://localhost:13306/bos}
+    username: ${db-user}
+    password: ${db-password}
+    driver-class-name: org.mariadb.jdbc.Driver
+  # Flyway는 Gradle 플러그인으로 관리 (build.gradle.kts 참조)
+  flyway:
+    enabled: false
   mail:
     host: smtp.gmail.com
     port: 587

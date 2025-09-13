@@ -1,0 +1,31 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb
+    username: test
+    password: test
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: test
+    password: test
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: test@example.com
+    password: testpassword
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+jwt:
+  secret: test-jwt-secret-key-for-testing-purposes
+
+app:
+  s3:
+    bucket-name: bos-assets
+    base-url: https://bos-assets.s3.ap-northeast-2.amazonaws.com
