@@ -64,7 +64,9 @@ jobs:
           ./gradlew flywayMigrate \
             -Pflyway.url=jdbc:mariadb://127.0.0.1:3306/bos_test \
             -Pflyway.user=root \
-            -Pflyway.password=testpassword
+            -Pflyway.password=testpassword \
+            -Pflyway.baselineOnMigrate=true \
+            -Pflyway.baselineVersion=0
 
           echo "📊 Verifying migration status..."
           ./gradlew flywayInfo \
