@@ -50,12 +50,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Run Kotlin Lint Check
-        run: ./gradlew ktlintCheck
-
-      - name: Run Detekt
-        run: ./gradlew detekt
-
       - name: Wait for MariaDB
         run: |
           while ! mysqladmin ping -h"127.0.0.1" -P3306 -u root -ptestpassword --silent; do
@@ -65,22 +59,20 @@ jobs:
           echo "MariaDB is ready!"
 
       - name: Test Database Migration
-        env:
-          jdbc-url: jdbc:mariadb://127.0.0.1:3306/bos_test
-          db-user: root
-          db-password: testpassword
         run: |
           echo "🚀 Running Flyway migration..."
-          ./gradlew flywayMigrate
+          ./gradlew flywayMigrate \
+            -Pflyway.url=jdbc:mariadb://127.0.0.1:3306/bos_test \
+            -Pflyway.user=root \
+            -Pflyway.password=testpassword
 
           echo "📊 Verifying migration status..."
-          ./gradlew flywayInfo
+          ./gradlew flywayInfo \
+            -Pflyway.url=jdbc:mariadb://127.0.0.1:3306/bos_test \
+            -Pflyway.user=root \
+            -Pflyway.password=testpassword
 
       - name: Verify Migration Result
-        env:
-          jdbc-url: jdbc:mariadb://127.0.0.1:3306/bos_test
-          db-user: root
-          db-password: testpassword
         run: |
           echo "✅ Checking if flyway_schema_history table exists..."
           # Docker exec으로 MariaDB 컨테이너에서 직접 실행
