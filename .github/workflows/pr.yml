@@ -56,29 +56,41 @@ jobs:
           done
           echo "MariaDB is ready!"
 
-      - name: Test Database Migration
+      - name: Test Application Startup with Migration
+        env:
+          db-host: r2dbc:mariadb://127.0.0.1:3306/bos_test
+          jdbc-url: jdbc:mariadb://127.0.0.1:3306/bos_test
+          db-user: root
+          db-password: testpassword
+          jwt-secret: testsecret123testsecret123testsecret123testsecret123
+          redis-host: localhost
+          redis-port: 6379
+          mail-username: test@test.com
+          mail-password: testpassword
+          s3-bucket-name: test-bucket
+          s3-base-url: https://test.s3.amazonaws.com
         run: |
-          echo "🚀 Running Flyway migration..."
-          ./gradlew flywayMigrate \
-            -Pflyway.url=jdbc:mariadb://127.0.0.1:3306/bos_test \
-            -Pflyway.user=root \
-            -Pflyway.password=testpassword \
-            -Pflyway.baselineOnMigrate=true \
-            -Pflyway.baselineVersion=1
-
-          echo "📊 Verifying migration status..."
-          ./gradlew flywayInfo \
-            -Pflyway.url=jdbc:mariadb://127.0.0.1:3306/bos_test \
-            -Pflyway.user=root \
-            -Pflyway.password=testpassword
-
-      - name: Verify Migration Result
-        run: |
-          echo "✅ Checking if flyway_schema_history table exists..."
-          # Docker exec으로 MariaDB 컨테이너에서 직접 실행
-          docker exec $(docker ps -q --filter "ancestor=mariadb:10.11") \
-            mariadb -u root -ptestpassword -D bos_test \
-            -e "SELECT COUNT(*) as migration_count FROM flyway_schema_history;" || echo "Migration verification completed"
+          echo "🚀 Starting application (migrations will run automatically)..."
+          timeout 60 ./gradlew bootRun --no-daemon &
+          APP_PID=$!
+          
+          echo "⏳ Waiting for application to start and run migrations..."
+          sleep 30
+          
+          # Check if application is running and healthy
+          for i in {1..10}; do
+            if curl -f http://localhost:8000/actuator/health >/dev/null 2>&1; then
+              echo "✅ Application started successfully with migrations"
+              kill $APP_PID 2>/dev/null || true
+              exit 0
+            fi
+            echo "⏳ Health check attempt $i/10, retrying in 5s..."
+            sleep 5
+          done
+          
+          echo "❌ Application startup failed or took too long"
+          kill $APP_PID 2>/dev/null || true
+          exit 1
 
 #      - name: Run Unit Tests
 #        run: ./gradlew test

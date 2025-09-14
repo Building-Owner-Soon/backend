@@ -1,7 +1,7 @@
--- Initial schema migration for 내꿈은 건물주 project
+-- Initial schema migration
 
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGINT NOT NULL AUTO_INCREMENT,
     nickname VARCHAR(50),
     notification_allowed BOOLEAN NOT NULL DEFAULT FALSE,
@@ -15,7 +15,7 @@ CREATE TABLE users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- User authentication table
-CREATE TABLE user_auths (
+CREATE TABLE IF NOT EXISTS user_auths (
     id BIGINT NOT NULL AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     provider_type VARCHAR(50) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE user_auths (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Terms table
-CREATE TABLE terms (
+CREATE TABLE IF NOT EXISTS terms (
     id BIGINT NOT NULL AUTO_INCREMENT,
     code VARCHAR(50) NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE terms (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- User terms agreement table
-CREATE TABLE user_terms_agreement (
+CREATE TABLE IF NOT EXISTS user_terms_agreement (
     id BIGINT NOT NULL AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     terms_id BIGINT NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE user_terms_agreement (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Notifications table
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id BIGINT NOT NULL AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     title VARCHAR(255) NOT NULL,
