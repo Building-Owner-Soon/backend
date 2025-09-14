@@ -1,0 +1,56 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb
+    username: test
+    password: test
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: test
+    password: test
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: test@example.com
+    password: testpassword
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+application:
+  jwt:
+    secret: test-jwt-secret-key-for-testing-purposes
+    access-token-expiration: 21600
+    refresh-token-expiration: 2592000
+
+app:
+  s3:
+    bucket-name: bos-assets
+    base-url: https://bos-assets.s3.ap-northeast-2.amazonaws.com
+
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - http://localhost:8080
+
+# Test-specific settings
+db-host: r2dbc:h2:mem:///testdb
+db-user: test
+db-password: test
+jdbc-url: jdbc:h2:mem:testdb
+mail-username: test@example.com
+mail-password: testpassword
+redis-host: localhost
+redis-port: 6379
+jwt-secret: test-jwt-secret-key-for-testing-purposes
+s3-bucket-name: bos-assets
+s3-base-url: https://bos-assets.s3.ap-northeast-2.amazonaws.com
