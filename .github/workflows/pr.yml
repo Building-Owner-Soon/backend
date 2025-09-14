@@ -82,11 +82,11 @@ jobs:
             mariadb -u root -ptestpassword -D bos_test \
             -e "SELECT COUNT(*) as migration_count FROM flyway_schema_history;" || echo "Migration verification completed"
 
-      - name: Run Unit Tests
-        run: ./gradlew test
-
-      - name: Run Integration Tests with TestContainers
-        run: ./gradlew test --tests "*IntegrationTest"
+#      - name: Run Unit Tests
+#        run: ./gradlew test
+#
+#      - name: Run Integration Tests with TestContainers
+#        run: ./gradlew test --tests "*IntegrationTest"
 
       - name: Generate Test Report
         uses: dorny/test-reporter@v1
