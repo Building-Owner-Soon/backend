@@ -93,10 +93,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
+      - name: Test S3 Access
+        run: |
+          echo "Testing S3 bucket access..."
+          aws sts get-caller-identity
+          aws s3 ls s3://bos-build-artifacts/ || echo "Failed to list bucket"
+
       - name: Upload to S3
         run: |
+          echo "Uploading: build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar"
+          echo "Target: s3://bos-build-artifacts/backend/bos-backend-${{ steps.version.outputs.VERSION }}.jar"
+
           aws s3 cp build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar \
-          s3://bos-artifacts/backend/bos-backend-${{ steps.version.outputs.VERSION }}.jar
+          s3://bos-build-artifacts/bos-backend-${{ steps.version.outputs.VERSION }}.jar \
+          --debug
 
       - name: Upload GitHub Artifact (Backup)
         uses: actions/upload-artifact@v4
@@ -107,10 +117,10 @@ jobs:
 
       - name: Discord Notification with Deploy Buttons
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ARTIFACT_URL="s3://bos-artifacts/backend/bos-backend-${{ steps.version.outputs.VERSION }}.jar"
+          ARTIFACT_URL="s3://bos-build-artifacts/backend/bos-backend-${{ steps.version.outputs.VERSION }}.jar"
           DB_STATUS_EMOJI=""
           DB_STATUS_TEXT="No DB changes"
 

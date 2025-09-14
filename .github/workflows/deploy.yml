@@ -7,11 +7,6 @@ on:
         description: 'Artifact version to deploy (e.g., develop-a1b2c3d4, v1.0.0)'
         required: true
         type: string
-      run_migration:
-        description: 'Run database migration'
-        required: false
-        default: false
-        type: boolean
       dry_run:
         description: 'Dry run (validate deployment without executing)'
         required: false
@@ -42,11 +37,9 @@ jobs:
           # Handle both workflow_dispatch and repository_dispatch events
           if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
             echo "ARTIFACT_VERSION=${{ github.event.client_payload.artifact_version }}" >> $GITHUB_OUTPUT
-            echo "RUN_MIGRATION=${{ github.event.client_payload.db_changed }}" >> $GITHUB_OUTPUT
             echo "DRY_RUN=false" >> $GITHUB_OUTPUT
           else
             echo "ARTIFACT_VERSION=${{ inputs.artifact_version }}" >> $GITHUB_OUTPUT
-            echo "RUN_MIGRATION=${{ inputs.run_migration }}" >> $GITHUB_OUTPUT
             echo "DRY_RUN=${{ inputs.dry_run }}" >> $GITHUB_OUTPUT
           fi
 
@@ -84,65 +77,12 @@ jobs:
           echo "Downloaded artifact size:"
           ls -lh artifacts/
 
-      - name: Set up JDK 21 (for migration)
-        if: steps.vars.outputs.RUN_MIGRATION == 'true'
-        uses: actions/setup-java@v4
-        with:
-          distribution: "corretto"
-          java-version: "21"
-
-      - name: Cache Gradle packages (for migration)
-        if: steps.vars.outputs.RUN_MIGRATION == 'true'
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Run Database Migration
-        if: steps.vars.outputs.RUN_MIGRATION == 'true' && steps.vars.outputs.DRY_RUN == 'false'
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: |
-          echo "🔄 Running database migration..."
-          chmod +x ./gradlew
-
-          # Single environment setup - use main database
-          DB_URL="jdbc:mariadb://${DB_HOST}:3306/${DB_NAME}"
-          echo "Database URL: $DB_URL"
-
-          # TODO: Add environment-specific database selection when needed
-          # if [[ "$ENVIRONMENT" == "production" ]]; then
-          #   DB_URL="jdbc:mariadb://${DB_HOST}:3306/${DB_NAME}"
-          # else
-          #   DB_URL="jdbc:mariadb://${DB_HOST}:3306/${DB_NAME}_staging"
-          # fi
-
-          ./gradlew flywayMigrate \
-            -Pflyway.url="$DB_URL" \
-            -Pflyway.user="$DB_USER" \
-            -Pflyway.password="$DB_PASSWORD" \
-            -Pflyway.baselineOnMigrate=true \
-            -Pflyway.baselineVersion=1
-
-          echo "📊 Verifying migration status..."
-          ./gradlew flywayInfo \
-            -Pflyway.url="$DB_URL" \
-            -Pflyway.user="$DB_USER" \
-            -Pflyway.password="$DB_PASSWORD"
 
       - name: Dry Run Validation
         if: steps.vars.outputs.DRY_RUN == 'true'
         run: |
           echo "🔍 DRY RUN MODE - Validation Only"
           echo "Artifact: bos-backend-${{ steps.vars.outputs.ARTIFACT_VERSION }}.jar"
-          echo "Run Migration: ${{ steps.vars.outputs.RUN_MIGRATION }}"
           echo "Target Host: ${{ secrets.EC2_HOST }}"
           echo "✅ All validations passed - deployment would succeed"
 
@@ -281,12 +221,7 @@ jobs:
             STATUS_TEXT="Deployment failed"
           fi
 
-          MIGRATION_STATUS=""
-          if [ "${{ steps.vars.outputs.RUN_MIGRATION }}" == "true" ]; then
-            MIGRATION_STATUS="🔄 Database migrated"
-          else
-            MIGRATION_STATUS="✅ No migration needed"
-          fi
+          MIGRATION_STATUS="🔄 Migrations run on startup"
           
           HEALTH_STATUS="✅ Healthy"
           if [ "${{ steps.external_health_check.outputs.health_status }}" == "failed" ]; then
