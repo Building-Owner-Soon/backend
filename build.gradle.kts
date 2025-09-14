@@ -1,9 +1,3 @@
-buildscript {
-    dependencies {
-        classpath("org.mariadb.jdbc:mariadb-java-client:3.4.1")
-        classpath("org.flywaydb:flyway-mysql:9.22.3")
-    }
-}
 
 plugins {
     kotlin("jvm") version "1.9.23"
@@ -13,7 +7,6 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("org.jlleitschuh.gradle.ktlint") version "12.3.0"
-    id("org.flywaydb.flyway") version "9.22.3"
 }
 
 detekt {
@@ -147,23 +140,6 @@ tasks.register<Copy>("copyPrePushHook") {
     doLast {
         file("$rootDir/.git/hooks/pre-push").setExecutable(true)
     }
-}
-
-flyway {
-    // 하이픈이 포함된 환경변수 지원을 위한 헬퍼 함수
-    fun getEnvWithFallback(
-        vararg keys: String,
-        default: String,
-    ): String = keys.firstNotNullOfOrNull { System.getenv(it) } ?: default
-
-    url = getEnvWithFallback("jdbc-url", "JDBC_URL", "jdbc_url", default = "jdbc:h2:mem:testdb")
-    user = getEnvWithFallback("db-user", "DB_USER", "db_user", default = "test")
-    password = getEnvWithFallback("db-password", "DB_PASSWORD", "db_password", default = "test")
-    driver = "org.mariadb.jdbc.Driver"
-    locations = arrayOf("classpath:db/migration")
-    baselineOnMigrate = true
-    baselineVersion = "1"
-    validateOnMigrate = true
 }
 
 tasks.build {

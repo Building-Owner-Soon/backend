@@ -9,9 +9,15 @@ spring:
     username: ${db-user}
     password: ${db-password}
     driver-class-name: org.mariadb.jdbc.Driver
-  # Flyway는 Gradle 플러그인으로 관리 (build.gradle.kts 참조)
   flyway:
-    enabled: false
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 1
+    validate-on-migrate: true
+    url: ${jdbc-url:jdbc:mariadb://localhost:13306/bos}
+    user: ${db-user}
+    password: ${db-password}
   mail:
     host: smtp.gmail.com
     port: 587
