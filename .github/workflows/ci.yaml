@@ -1,16 +1,17 @@
-name: Spring Boot CI/CD
+name: Continuous Integration
 
 on:
-  workflow_dispatch:
   push:
     branches:
-      - master
       - develop
+      - master
+      - ci-test
   release:
     types:
       - created
+
 jobs:
-  build-and-deploy:
+  build-and-upload:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,10 +27,20 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Get version string
         id: version
         run: |
-          if [[ "${{ github.event_name }}" == "create" && "${{ github.ref }}" == refs/tags/* ]]; then
+          if [[ "${{ github.event_name }}" == "release" ]]; then
             VERSION="${GITHUB_REF#refs/tags/}"
           else
             BRANCH_NAME="${GITHUB_REF#refs/heads/}"
@@ -39,118 +50,114 @@ jobs:
           fi
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Detect Database Changes
+        id: db_changes
+        run: |
+          # Check for changes in migration files
+          DB_CHANGED=false
+          if git diff --name-only HEAD~1 HEAD | grep -q "src/main/resources/db/migration/"; then
+            DB_CHANGED=true
+            echo "🔍 Database migration files changed"
+            git diff --name-only HEAD~1 HEAD | grep "src/main/resources/db/migration/" || true
+          fi
+          echo "DB_CHANGED=$DB_CHANGED" >> $GITHUB_OUTPUT
+
+          # Get migration file list for deployment
+          MIGRATION_FILES=$(find src/main/resources/db/migration -name "*.sql" -type f | sort | tr '\n' ',' | sed 's/,$//')
+          echo "MIGRATION_FILES=$MIGRATION_FILES" >> $GITHUB_OUTPUT
+
+      - name: Run Tests
+        run: ./gradlew test
+
       - name: Build with Gradle
-        run: ./gradlew clean build -x test
+        run: ./gradlew clean build
 
       - name: Rename JAR
         run: |
           JAR_FILE=$(find build/libs -type f -name "*.jar" ! -name "*-plain.jar" | head -n 1)
           mv "$JAR_FILE" "build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar"
 
-      - name: Upload artifact
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar \
+          s3://bos-artifacts/backend/bos-backend-${{ steps.version.outputs.VERSION }}.jar
+
+      - name: Upload GitHub Artifact (Backup)
         uses: actions/upload-artifact@v4
         with:
           name: bos-backend-${{ steps.version.outputs.VERSION }}
           path: build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar
+          retention-days: 30
 
-      - name: Deploy to EC2
+      - name: Discord Notification with Deploy Buttons
         env:
-          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          HOST: ${{ secrets.EC2_HOST }}
-          USER: ${{ secrets.EC2_USER }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "$PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
-          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar $USER@$HOST:/home/$USER/bos-backend-${{ steps.version.outputs.VERSION }}.jar
-          ssh -i private_key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
-            pkill -f 'java -jar' || true
-            nohup java -jar /home/$USER/bos-backend-${{ steps.version.outputs.VERSION }}.jar > bos-backend-${{ steps.version.outputs.VERSION }}.log 2>&1 &
-          EOF
+          ARTIFACT_URL="s3://bos-artifacts/backend/bos-backend-${{ steps.version.outputs.VERSION }}.jar"
+          DB_STATUS_EMOJI=""
+          DB_STATUS_TEXT="No DB changes"
 
-      - name: Health Check
-        id: health_check
-        run: |
-          echo "Waiting for application to start..."
-          sleep 30
-
-          success=false
-          for i in {1..3}; do
-            echo "Health check attempt $i/3..."
-            if curl -f -s http://54.180.123.147:8000/actuator/health > /dev/null; then
-              echo "Health check passed!"
-              success=true
-              break
-            else
-              echo "Health check failed, retrying in 30 seconds..."
-              sleep 30
-            fi
-          done
-
-          if [ "$success" = "true" ]; then
-            echo "health_status=success" >> $GITHUB_OUTPUT
+          if [[ "${{ steps.db_changes.outputs.DB_CHANGED }}" == "true" ]]; then
+            DB_STATUS_EMOJI="🔄"
+            DB_STATUS_TEXT="DB migrations required"
           else
-            echo "health_status=failed" >> $GITHUB_OUTPUT
-            exit 1
+            DB_STATUS_EMOJI="✅"
+            DB_STATUS_TEXT="No DB changes"
           fi
 
-      - name: Discord Success Notification
-        if: steps.health_check.outputs.health_status == 'success'
-        run: |
-          curl -H "Content-Type: application/json" \
-            -d '{
-              "embeds": [{
-                "title": "🚀 배포 성공",
-                "description": "BOS Backend가 성공적으로 배포되었습니다!",
-                "color": 65280,
-                "fields": [
-                  {
-                    "name": "버전",
-                    "value": "${{ steps.version.outputs.VERSION }}",
-                    "inline": true
-                  },
-                  {
-                    "name": "브랜치",
-                    "value": "${{ github.ref_name }}",
-                    "inline": true
-                  },
-                  {
-                    "name": "서버 상태",
-                    "value": "✅ 정상",
-                    "inline": true
-                  }
-                ],
-                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-              }]
-            }' \
-            ${{ secrets.DISCORD_WEBHOOK_URL }}
+          # Send Discord notification with deployment trigger buttons
+          MESSAGE_ID=$(curl -s -H "Content-Type: application/json" \
+          -d "{
+            \"embeds\": [{
+              \"title\": \"🚀 CI Build Completed\",
+              \"color\": 3066993,
+              \"fields\": [
+                {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"inline\": true},
+                {\"name\": \"Version\", \"value\": \"${{ steps.version.outputs.VERSION }}\", \"inline\": true},
+                {\"name\": \"Commit\", \"value\": \"[\`${{ github.sha }}\`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})\", \"inline\": true},
+                {\"name\": \"Database\", \"value\": \"${DB_STATUS_EMOJI} ${DB_STATUS_TEXT}\", \"inline\": true},
+                {\"name\": \"Artifact\", \"value\": \"\`${ARTIFACT_URL}\`\", \"inline\": false}
+              ],
+              \"footer\": {\"text\": \"Ready for deployment\"},
+              \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+            }],
+            \"components\": [{
+              \"type\": 1,
+              \"components\": [
+                {
+                  \"type\": 2,
+                  \"style\": 1,
+                  \"label\": \"🚀 Deploy Now\",
+                  \"url\": \"${{ github.server_url }}/${{ github.repository }}/actions/workflows/quick_deploy.yml\"
+                }
+              ]
+            }]
+          }" \
+          $DISCORD_WEBHOOK | jq -r '.id // empty')
 
-      - name: Discord Failure Notification
-        if: failure()
-        run: |
-          curl -H "Content-Type: application/json" \
-            -d '{
-              "embeds": [{
-                "title": "❌ 배포 실패",
-                "description": "BOS Backend 배포 중 오류가 발생했습니다.",
-                "color": 16711680,
-                "fields": [
-                  {
-                    "name": "버전",
-                    "value": "${{ steps.version.outputs.VERSION }}",
-                    "inline": true
-                  },
-                  {
-                    "name": "브랜치",
-                    "value": "${{ github.ref_name }}",
-                    "inline": true
-                  },
-                  {
-                    "name": "실패 단계",
-                    "value": "${{ job.status }}",
-                    "inline": true
-                  }
-                ],
-                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-              }]
-            }' \
-            ${{ secrets.DISCORD_WEBHOOK_URL }}
+          # Create deployment trigger via GitHub API
+          echo "Creating deployment trigger..."
+          curl -L -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/dispatches" \
+            -d "{
+              \"event_type\": \"deploy-ready\",
+              \"client_payload\": {
+                \"artifact_version\": \"${{ steps.version.outputs.VERSION }}\",
+                \"branch\": \"${{ github.ref_name }}\",
+                \"commit\": \"${{ github.sha }}\",
+                \"db_changed\": \"${{ steps.db_changes.outputs.DB_CHANGED }}\",
+                \"migration_files\": \"${{ steps.db_changes.outputs.MIGRATION_FILES }}\"
+              }
+            }"
+

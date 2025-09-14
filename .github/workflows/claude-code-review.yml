@@ -50,6 +50,10 @@ jobs:
             - DDD (Domain-Driven Design) principles
             - Spring WebFlux reactive patterns
             - Critical bugs and security issues
+            
+            Additionally, if there are changes to Flyway migration files:
+            - Verify migration naming convention and SQL syntax
+            - Check for potentially destructive operations
 
             Keep the review concise and focused on these specific areas only.
 
