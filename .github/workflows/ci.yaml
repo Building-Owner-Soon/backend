@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - master
+      - ci-test
   release:
     types:
       - created
@@ -49,6 +50,22 @@ jobs:
           fi
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Detect Database Changes
+        id: db_changes
+        run: |
+          # Check for changes in migration files
+          DB_CHANGED=false
+          if git diff --name-only HEAD~1 HEAD | grep -q "src/main/resources/db/migration/"; then
+            DB_CHANGED=true
+            echo "🔍 Database migration files changed"
+            git diff --name-only HEAD~1 HEAD | grep "src/main/resources/db/migration/" || true
+          fi
+          echo "DB_CHANGED=$DB_CHANGED" >> $GITHUB_OUTPUT
+
+          # Get migration file list for deployment
+          MIGRATION_FILES=$(find src/main/resources/db/migration -name "*.sql" -type f | sort | tr '\n' ',' | sed 's/,$//')
+          echo "MIGRATION_FILES=$MIGRATION_FILES" >> $GITHUB_OUTPUT
+
       - name: Run Tests
         run: ./gradlew test
 
@@ -79,13 +96,25 @@ jobs:
           path: build/libs/bos-backend-${{ steps.version.outputs.VERSION }}.jar
           retention-days: 30
 
-      - name: Discord Notification
+      - name: Discord Notification with Deploy Buttons
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ARTIFACT_URL="s3://bos-artifacts/backend/bos-backend-${{ steps.version.outputs.VERSION }}.jar"
+          DB_STATUS_EMOJI=""
+          DB_STATUS_TEXT="No DB changes"
 
-          curl -H "Content-Type: application/json" \
+          if [[ "${{ steps.db_changes.outputs.DB_CHANGED }}" == "true" ]]; then
+            DB_STATUS_EMOJI="🔄"
+            DB_STATUS_TEXT="DB migrations required"
+          else
+            DB_STATUS_EMOJI="✅"
+            DB_STATUS_TEXT="No DB changes"
+          fi
+
+          # Send Discord notification with deployment trigger buttons
+          MESSAGE_ID=$(curl -s -H "Content-Type: application/json" \
           -d "{
             \"embeds\": [{
               \"title\": \"🚀 CI Build Completed\",
@@ -94,8 +123,8 @@ jobs:
                 {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"inline\": true},
                 {\"name\": \"Version\", \"value\": \"${{ steps.version.outputs.VERSION }}\", \"inline\": true},
                 {\"name\": \"Commit\", \"value\": \"[\`${{ github.sha }}\`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})\", \"inline\": true},
-                {\"name\": \"Artifact\", \"value\": \"\`${ARTIFACT_URL}\`\", \"inline\": false},
-                {\"name\": \"Triggered by\", \"value\": \"${{ github.event_name }}\", \"inline\": true}
+                {\"name\": \"Database\", \"value\": \"${DB_STATUS_EMOJI} ${DB_STATUS_TEXT}\", \"inline\": true},
+                {\"name\": \"Artifact\", \"value\": \"\`${ARTIFACT_URL}\`\", \"inline\": false}
               ],
               \"footer\": {\"text\": \"Ready for deployment\"},
               \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
@@ -105,105 +134,30 @@ jobs:
               \"components\": [
                 {
                   \"type\": 2,
-                  \"style\": 3,
-                  \"label\": \"🚀 Deploy to Staging\",
-                  \"url\": \"${{ github.server_url }}/${{ github.repository }}/actions/workflows/deploy.yml\"
-                },
-                {
-                  \"type\": 2,
                   \"style\": 1,
-                  \"label\": \"🔥 Deploy to Production\",
-                  \"url\": \"${{ github.server_url }}/${{ github.repository }}/actions/workflows/deploy.yml\"
+                  \"label\": \"🚀 Deploy Now\",
+                  \"url\": \"${{ github.server_url }}/${{ github.repository }}/actions/workflows/quick_deploy.yml\"
                 }
               ]
             }]
           }" \
-          $DISCORD_WEBHOOK
+          $DISCORD_WEBHOOK | jq -r '.id // empty')
 
-      - name: Health Check
-        id: health_check
-        run: |
-          echo "Waiting for application to start..."
-          sleep 30
+          # Create deployment trigger via GitHub API
+          echo "Creating deployment trigger..."
+          curl -L -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/dispatches" \
+            -d "{
+              \"event_type\": \"deploy-ready\",
+              \"client_payload\": {
+                \"artifact_version\": \"${{ steps.version.outputs.VERSION }}\",
+                \"branch\": \"${{ github.ref_name }}\",
+                \"commit\": \"${{ github.sha }}\",
+                \"db_changed\": \"${{ steps.db_changes.outputs.DB_CHANGED }}\",
+                \"migration_files\": \"${{ steps.db_changes.outputs.MIGRATION_FILES }}\"
+              }
+            }"
 
-          success=false
-          for i in {1..3}; do
-            echo "Health check attempt $i/3..."
-            if curl -f -s http://54.180.123.147:8000/actuator/health > /dev/null; then
-              echo "Health check passed!"
-              success=true
-              break
-            else
-              echo "Health check failed, retrying in 30 seconds..."
-              sleep 30
-            fi
-          done
-
-          if [ "$success" = "true" ]; then
-            echo "health_status=success" >> $GITHUB_OUTPUT
-          else
-            echo "health_status=failed" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-      - name: Discord Success Notification
-        if: steps.health_check.outputs.health_status == 'success'
-        run: |
-          curl -H "Content-Type: application/json" \
-            -d '{
-              "embeds": [{
-                "title": "🚀 배포 성공",
-                "description": "BOS Backend가 성공적으로 배포되었습니다!",
-                "color": 65280,
-                "fields": [
-                  {
-                    "name": "버전",
-                    "value": "${{ steps.version.outputs.VERSION }}",
-                    "inline": true
-                  },
-                  {
-                    "name": "브랜치",
-                    "value": "${{ github.ref_name }}",
-                    "inline": true
-                  },
-                  {
-                    "name": "서버 상태",
-                    "value": "✅ 정상",
-                    "inline": true
-                  }
-                ],
-                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-              }]
-            }' \
-            ${{ secrets.DISCORD_WEBHOOK_URL }}
-
-      - name: Discord Failure Notification
-        if: failure()
-        run: |
-          curl -H "Content-Type: application/json" \
-            -d '{
-              "embeds": [{
-                "title": "❌ 배포 실패",
-                "description": "BOS Backend 배포 중 오류가 발생했습니다.",
-                "color": 16711680,
-                "fields": [
-                  {
-                    "name": "버전",
-                    "value": "${{ steps.version.outputs.VERSION }}",
-                    "inline": true
-                  },
-                  {
-                    "name": "브랜치",
-                    "value": "${{ github.ref_name }}",
-                    "inline": true
-                  },
-                  {
-                    "name": "실패 단계",
-                    "value": "${{ job.status }}",
-                    "inline": true
-                  }
-                ],
-                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-              }]
-            }' \
-            ${{ secrets.DISCORD_WEBHOOK_URL }}
