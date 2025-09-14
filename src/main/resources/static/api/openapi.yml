@@ -266,6 +266,86 @@ paths:
             - `INVALID_TOKEN`: 유효하지 않은 토큰
         "500":
           $ref: "#/components/responses/InternalServerErrorResponseSpec"
+  /auth/token/refresh:
+    post:
+      tags:
+        - auth
+      operationId: refreshToken
+      summary: "인증 토큰 갱신"
+      description: |-
+        리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급받습니다.
+
+        ## req payload
+        - 요청 바디에 리프레시 토큰을 포함해야 합니다
+
+        ## 보안 정책
+        - 리프레시 토큰 사용 시 기존 리프레시 토큰은 자동으로 폐기됩니다
+        - 새로운 액세스 토큰과 리프레시 토큰이 발급됩니다
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenRefreshRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/TokenRefreshResponseSpec"
+        "400":
+          description: |-
+            토큰 갱신 요청 실패
+
+            **에러 케이스:**
+            - `REFRESH_TOKEN_NOT_FOUND`: 리프레시 토큰을 찾을 수 없습니다
+            - `INVALID_TOKEN`: 유효하지 않은 토큰 형식입니다
+            - `INVALID_REQUEST`: 요청 형식이 올바르지 않습니다 (refreshToken 필드 누락)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenRefreshErrorResponse"
+              examples:
+                refresh_token_not_found:
+                  summary: 리프레시 토큰을 찾을 수 없음
+                  value:
+                    errorCode: "REFRESH_TOKEN_NOT_FOUND"
+                    message: "리프레시 토큰을 찾을 수 없습니다."
+                invalid_token:
+                  summary: 유효하지 않은 토큰 형식
+                  value:
+                    errorCode: "INVALID_TOKEN"
+                    message: "유효하지 않은 토큰입니다."
+                invalid_request:
+                  summary: 잘못된 요청 형식
+                  value:
+                    errorCode: "INVALID_REQUEST"
+                    message: "요청값이 올바르지 않습니다."
+                    errors:
+                      - field: "refreshToken"
+                        errorCode: "REQUIRED"
+                        message: "리프레시 토큰은 필수입니다."
+        "401":
+          description: |-
+            인증 실패 - 토큰이 만료되거나 폐기된 경우
+
+            **에러 케이스:**
+            - `REFRESH_TOKEN_EXPIRED`: 리프레시 토큰이 만료되었습니다
+            - `REFRESH_TOKEN_REVOKED`: 리프레시 토큰이 폐기되었습니다
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenRefreshErrorResponse"
+              examples:
+                refresh_token_expired:
+                  summary: 리프레시 토큰 만료
+                  value:
+                    errorCode: "REFRESH_TOKEN_EXPIRED"
+                    message: "리프레시 토큰이 만료되었습니다."
+                refresh_token_revoked:
+                  summary: 리프레시 토큰 폐기
+                  value:
+                    errorCode: "REFRESH_TOKEN_REVOKED"
+                    message: "리프레시 토큰이 폐기되었습니다."
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
   /users/me:
     get:
       tags:
@@ -1071,6 +1151,53 @@ components:
           format: int64
           description: 읽지 않은 알림 수
           example: 5
+    TokenRefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: 리프레시 토큰
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    TokenRefreshErrorResponse:
+      type: object
+      required:
+        - errorCode
+        - message
+      properties:
+        errorCode:
+          type: string
+          description: 에러 코드
+          enum:
+            - REFRESH_TOKEN_NOT_FOUND
+            - REFRESH_TOKEN_EXPIRED
+            - REFRESH_TOKEN_REVOKED
+            - INVALID_TOKEN
+            - INVALID_REQUEST
+          example: "REFRESH_TOKEN_EXPIRED"
+        message:
+          type: string
+          description: 에러 메시지
+          example: "리프레시 토큰이 만료되었습니다."
+        errors:
+          type: array
+          description: 필드별 검증 오류 (INVALID_REQUEST 시에만 포함)
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: 오류가 발생한 필드명
+                example: "refreshToken"
+              errorCode:
+                type: string
+                description: 필드별 에러 코드
+                example: "REQUIRED"
+              message:
+                type: string
+                description: 필드별 에러 메시지
+                example: "리프레시 토큰은 필수입니다."
 
   requestBodies:
     SignUpRequestSpec:
@@ -1140,3 +1267,13 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/UserProfileResponse"
+    TokenRefreshResponseSpec:
+      description: |-
+        토큰 갱신 성공
+
+        새로운 액세스 토큰과 리프레시 토큰이 발급됩니다.
+        기존 리프레시 토큰은 자동으로 폐기됩니다.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CommonSignResponseBody"
