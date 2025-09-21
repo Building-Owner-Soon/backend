@@ -2,44 +2,36 @@ package com.bos.backend.application.transaction
 
 import com.bos.backend.application.CommonErrorCode
 import com.bos.backend.application.CustomException
-import com.bos.backend.domain.transaction.entity.Repayment
-import com.bos.backend.domain.transaction.entity.Transaction
+import com.bos.backend.domain.transaction.entity.RepaymentSchedule
 import com.bos.backend.domain.transaction.enum.RepaymentStatus
-import com.bos.backend.domain.transaction.enum.RepaymentType
-import com.bos.backend.domain.transaction.repository.RepaymentRepository
+import com.bos.backend.domain.transaction.repository.RepaymentScheduleRepository
 import com.bos.backend.domain.transaction.repository.TransactionRepository
 import com.bos.backend.presentation.transaction.dto.CreateRepaymentRequestDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentManagementResponseDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentScheduleItemDTO
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 import java.time.LocalDate
 
 @Service
 class RepaymentService(
-    private val repaymentRepository: RepaymentRepository,
+    private val repaymentScheduleRepository: RepaymentScheduleRepository,
     private val transactionRepository: TransactionRepository,
 ) {
-    suspend fun getRepaymentManagement(userId: Long): RepaymentManagementResponseDTO {
-        val userTransactions = transactionRepository.findByUserId(userId)
-        val transactionIds = userTransactions.map { it.id!! }
+    suspend fun getRepaymentManagement(
+        userId: Long,
+        transactionId: Long,
+    ): RepaymentManagementResponseDTO {
+        val transaction =
+            transactionRepository.findById(transactionId)
+                ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
 
-        if (transactionIds.isEmpty()) {
-            return RepaymentManagementResponseDTO(
-                overdueRepayments = emptyList(),
-                regularRepayments = emptyList(),
-            )
+        if (transaction.userId != userId) {
+            throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
         }
 
-        val repaymentRecords = repaymentRepository.findByTransactionIdIn(transactionIds)
+        val repaymentSchedules = repaymentScheduleRepository.findByTransactionId(transactionId)
         val today = LocalDate.now()
-        val repaymentItems = mutableListOf<RepaymentScheduleItemDTO>()
-
-        for (transaction in userTransactions) {
-            val repaymentRecords = repaymentRecords.filter { it.transactionId == transaction.id }
-            val items = generateRepaymentItems(transaction, repaymentRecords, today)
-            repaymentItems.addAll(items)
-        }
+        val repaymentItems = generateRepaymentItems(repaymentSchedules, today)
 
         val overdueRepayments =
             repaymentItems
@@ -58,99 +50,23 @@ class RepaymentService(
     }
 
     private fun generateRepaymentItems(
-        transaction: Transaction,
-        repaymentRecords: List<Repayment>,
+        repaymentSchedules: List<RepaymentSchedule>,
         today: LocalDate,
     ): List<RepaymentScheduleItemDTO> {
-        val items = mutableListOf<RepaymentScheduleItemDTO>()
+        // RepaymentSchedule 기반으로 직접 아이템 생성
+        return repaymentSchedules.map { schedule ->
+            val status =
+                when (schedule.status) {
+                    RepaymentStatus.COMPLETED -> RepaymentStatus.COMPLETED
+                    else -> getScheduledStatus(schedule.scheduledDate, today)
+                }
 
-        repaymentRecords.forEach { record ->
-            items.add(
-                RepaymentScheduleItemDTO(
-                    status = RepaymentStatus.COMPLETED,
-                    displayDate = record.repaymentDate,
-                    displayAmount = record.repaymentAmount,
-                ),
+            RepaymentScheduleItemDTO(
+                status = status,
+                displayDate = schedule.actualDate ?: schedule.scheduledDate,
+                displayAmount = schedule.actualAmount ?: schedule.scheduledAmount,
             )
-        }
-
-        val totalRepaidAmount = repaymentRecords.sumOf { it.repaymentAmount }
-        val remainingAmount = transaction.totalAmount - transaction.completedAmount - totalRepaidAmount
-
-        if (remainingAmount > BigDecimal.ZERO) {
-            val scheduledItems = generateScheduledItems(transaction, remainingAmount, today)
-            items.addAll(scheduledItems)
-        }
-
-        return items
-    }
-
-    private fun generateScheduledItems(
-        transaction: Transaction,
-        remainingAmount: BigDecimal,
-        today: LocalDate,
-    ): List<RepaymentScheduleItemDTO> =
-        when (transaction.repaymentType) {
-            RepaymentType.BY_DATE -> {
-                val targetDate = transaction.targetDate ?: return emptyList()
-                val status = getScheduledStatus(targetDate, today)
-                listOf(
-                    RepaymentScheduleItemDTO(
-                        status = status,
-                        displayDate = targetDate,
-                        displayAmount = remainingAmount,
-                    ),
-                )
-            }
-            RepaymentType.BY_MONTHLY -> {
-                generateMonthlyScheduledItems(transaction, remainingAmount, today)
-            }
-            RepaymentType.FLEXIBLE -> {
-                val targetDate = transaction.targetDate ?: return emptyList()
-                val status = getScheduledStatus(targetDate, today)
-                listOf(
-                    RepaymentScheduleItemDTO(
-                        status = status,
-                        displayDate = targetDate,
-                        displayAmount = remainingAmount,
-                    ),
-                )
-            }
-        }
-
-    private fun generateMonthlyScheduledItems(
-        transaction: Transaction,
-        remainingAmount: BigDecimal,
-        today: LocalDate,
-    ): List<RepaymentScheduleItemDTO> {
-        val monthlyAmount = transaction.monthlyAmount
-        val paymentDay = transaction.paymentDay
-
-        if (monthlyAmount == null || paymentDay == null) {
-            return emptyList()
-        }
-
-        val items = mutableListOf<RepaymentScheduleItemDTO>()
-        var currentAmount = remainingAmount
-        var currentDate = getNextPaymentDate(transaction.transactionDate, paymentDay)
-
-        while (currentAmount > BigDecimal.ZERO) {
-            val paymentAmount = if (currentAmount >= monthlyAmount) monthlyAmount else currentAmount
-            val status = getScheduledStatus(currentDate, today)
-
-            items.add(
-                RepaymentScheduleItemDTO(
-                    status = status,
-                    displayDate = currentDate,
-                    displayAmount = paymentAmount,
-                ),
-            )
-
-            currentAmount -= paymentAmount
-            currentDate = currentDate.plusMonths(1).withDayOfMonth(paymentDay)
-        }
-
-        return items
+        }.sortedBy { it.displayDate }
     }
 
     private fun getScheduledStatus(
@@ -164,44 +80,44 @@ class RepaymentService(
             else -> RepaymentStatus.SCHEDULED
         }
 
-    private fun getNextPaymentDate(
-        transactionDate: LocalDate,
-        paymentDay: Int,
-    ): LocalDate {
-        val currentMonth = transactionDate.withDayOfMonth(paymentDay)
-        return if (currentMonth.isAfter(transactionDate)) {
-            currentMonth
-        } else {
-            currentMonth.plusMonths(1)
-        }
-    }
-
     suspend fun addRepayment(
         userId: Long,
-        transactionId: Long,
+        scheduleId: Long,
         createRepaymentRequestDTO: CreateRepaymentRequestDTO,
     ): RepaymentScheduleItemDTO {
-        val transaction =
-            transactionRepository.findById(transactionId)
+        val schedule =
+            repaymentScheduleRepository.findById(scheduleId)
                 ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
 
-        if (transaction.userId != userId) {
-            throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
-        }
+        val transaction =
+            transactionRepository.findById(schedule.transactionId)
+                ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
 
-        val repayment =
-            Repayment(
-                transactionId = transactionId,
-                repaymentDate = createRepaymentRequestDTO.repaymentDate,
-                repaymentAmount = createRepaymentRequestDTO.repaymentAmount,
+        validateUserAccess(transaction.userId, userId)
+
+        val updatedSchedule =
+            schedule.copy(
+                status = RepaymentStatus.COMPLETED,
+                actualDate = createRepaymentRequestDTO.repaymentDate,
+                actualAmount = createRepaymentRequestDTO.repaymentAmount,
+                updatedAt = java.time.Instant.now(),
             )
 
-        val savedRepayment = repaymentRepository.save(repayment)
+        val savedSchedule = repaymentScheduleRepository.save(updatedSchedule)
 
         return RepaymentScheduleItemDTO(
             status = RepaymentStatus.COMPLETED,
-            displayDate = savedRepayment.repaymentDate,
-            displayAmount = savedRepayment.repaymentAmount,
+            displayDate = savedSchedule.actualDate!!,
+            displayAmount = savedSchedule.actualAmount!!,
         )
+    }
+
+    private fun validateUserAccess(
+        transactionUserId: Long,
+        requestUserId: Long,
+    ) {
+        if (transactionUserId != requestUserId) {
+            throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+        }
     }
 }
