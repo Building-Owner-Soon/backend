@@ -6,6 +6,7 @@ import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -32,4 +33,11 @@ class TransactionController(
         @AuthenticationPrincipal userId: String,
         @PathVariable id: Long,
     ): TransactionResponseDTO = transactionService.getTransactionDetail(userId.toLong(), id)
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    suspend fun deleteTransaction(
+        @AuthenticationPrincipal userId: String,
+        @PathVariable id: Long,
+    ): Unit = transactionService.deleteTransaction(userId.toLong(), id)
 }

@@ -2,10 +2,8 @@ package com.bos.backend.application.transaction
 
 import com.bos.backend.application.CommonErrorCode
 import com.bos.backend.application.CustomException
-import com.bos.backend.application.auth.AuthErrorCode
 import com.bos.backend.domain.transaction.entity.Transaction
 import com.bos.backend.domain.transaction.repository.TransactionRepository
-import com.bos.backend.domain.user.repository.UserRepository
 import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
 import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
 import org.springframework.stereotype.Service
@@ -16,7 +14,6 @@ import java.math.BigDecimal
 @Service
 class TransactionService(
     private val transactionRepository: TransactionRepository,
-    private val userRepository: UserRepository,
     private val transactionalOperator: TransactionalOperator,
 ) {
     suspend fun createTransaction(
@@ -24,9 +21,6 @@ class TransactionService(
         createTransactionRequestDTO: CreateTransactionRequestDTO,
     ): TransactionResponseDTO =
         transactionalOperator.executeAndAwait {
-            userRepository.findById(userId)
-                ?: throw CustomException(AuthErrorCode.USER_NOT_FOUND)
-
             val transaction =
                 Transaction(
                     userId = userId,
@@ -54,9 +48,6 @@ class TransactionService(
         userId: Long,
         transactionId: Long,
     ): TransactionResponseDTO {
-        userRepository.findById(userId)
-            ?: throw CustomException(AuthErrorCode.USER_NOT_FOUND)
-
         val transaction =
             transactionRepository.findById(transactionId)
                 ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
@@ -67,6 +58,22 @@ class TransactionService(
 
         return toTransactionResponseDTO(transaction)
     }
+
+    suspend fun deleteTransaction(
+        userId: Long,
+        transactionId: Long,
+    ): Unit =
+        transactionalOperator.executeAndAwait {
+            val transaction =
+                transactionRepository.findById(transactionId)
+                    ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+
+            if (transaction.userId != userId) {
+                throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+            }
+
+            transactionRepository.deleteById(transactionId)
+        }
 
     private fun toTransactionResponseDTO(transaction: Transaction): TransactionResponseDTO =
         TransactionResponseDTO(
