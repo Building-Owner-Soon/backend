@@ -523,6 +523,37 @@ paths:
                 $ref: "#/components/schemas/BaseProblemDetails"
         "500":
           $ref: "#/components/responses/InternalServerErrorResponseSpec"
+  /repayment-schedules/management:
+    get:
+      tags:
+        - transaction
+      operationId: getRepaymentManagement
+      summary: "상환 관리 조회"
+      description: |-
+        상환 관리 페이지를 위한 상환 일정 목록을 조회합니다.
+
+        ## 응답 구조
+        - **overdueRepayments**: 지연된 상환 목록 (예정일이 지난 미완료 상환)
+        - **regularRepayments**: 정규 상환 목록 (예정, 진행중, 완료된 상환)
+
+        ## 상환 상태별 표시 정보
+        - **OVERDUE** (지연): 예정일(이미 지난 날짜), 예정금액
+        - **SCHEDULED** (예정): 예정일(미래 날짜), 예정금액
+        - **IN_PROGRESS** (진행중): 예정일, 예정금액
+        - **COMPLETED** (완료): 실제 완료일, 실제 금액
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 상환 관리 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepaymentManagementResponse"
+        "401":
+          description: 인증 실패
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
 components:
   securitySchemes:
     BearerAuth:
@@ -1369,6 +1400,67 @@ components:
           format: date-time
           description: 수정 일시
           example: "2025-01-15T10:30:00Z"
+    RepaymentStatus:
+      type: string
+      enum:
+        - SCHEDULED
+        - IN_PROGRESS
+        - OVERDUE
+        - COMPLETED
+      description: |-
+        상환 상태
+        - SCHEDULED: 예정
+        - IN_PROGRESS: 진행중
+        - OVERDUE: 지연
+        - COMPLETED: 완료
+      example: SCHEDULED
+    RepaymentScheduleItem:
+      type: object
+      required:
+        - id
+        - transactionId
+        - status
+        - displayDate
+        - displayAmount
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 상환 일정 ID
+          example: 456
+        transactionId:
+          type: integer
+          format: int64
+          description: 거래 ID (거래 상세 조회용)
+          example: 123
+        status:
+          $ref: "#/components/schemas/RepaymentStatus"
+        displayDate:
+          type: string
+          format: date
+          description: 표시할 날짜 (지연/예정/진행중은 예정일, 완료는 실제완료일)
+          example: "2025-02-15"
+        displayAmount:
+          type: number
+          format: decimal
+          description: 표시할 금액 (지연/예정/진행중은 예정금액, 완료는 실제금액)
+          example: 50000
+    RepaymentManagementResponse:
+      type: object
+      required:
+        - overdueRepayments
+        - regularRepayments
+      properties:
+        overdueRepayments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RepaymentScheduleItem"
+          description: 지연된 상환 목록
+        regularRepayments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RepaymentScheduleItem"
+          description: 정규 상환 목록 (예정, 진행중, 완료된 상환)
 
   requestBodies:
     SignUpRequestSpec:
