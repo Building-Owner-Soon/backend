@@ -6,6 +6,7 @@ import com.bos.backend.domain.transaction.entity.Transaction
 import com.bos.backend.domain.transaction.repository.TransactionRepository
 import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
 import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
+import com.bos.backend.presentation.transaction.dto.UpdateTransactionRequestDTO
 import org.springframework.stereotype.Service
 import org.springframework.transaction.reactive.TransactionalOperator
 import org.springframework.transaction.reactive.executeAndAwait
@@ -73,6 +74,42 @@ class TransactionService(
             }
 
             transactionRepository.deleteById(transactionId)
+        }
+
+    suspend fun updateTransaction(
+        userId: Long,
+        transactionId: Long,
+        updateTransactionRequestDTO: UpdateTransactionRequestDTO,
+    ): TransactionResponseDTO =
+        transactionalOperator.executeAndAwait {
+            val existingTransaction =
+                transactionRepository.findById(transactionId)
+                    ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+
+            if (existingTransaction.userId != userId) {
+                throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+            }
+
+            val updatedTransaction =
+                existingTransaction.copy(
+                    transactionType = updateTransactionRequestDTO.transactionType,
+                    counterpartName = updateTransactionRequestDTO.counterpartName,
+                    counterpartCharacter = updateTransactionRequestDTO.counterpartCharacter,
+                    relationship = updateTransactionRequestDTO.relationship,
+                    customRelationship = updateTransactionRequestDTO.customRelationship,
+                    transactionDate = updateTransactionRequestDTO.transactionDate,
+                    totalAmount = updateTransactionRequestDTO.totalAmount,
+                    completedAmount = updateTransactionRequestDTO.completedAmount ?: BigDecimal.ZERO,
+                    memo = updateTransactionRequestDTO.memo,
+                    repaymentType = updateTransactionRequestDTO.repaymentType,
+                    targetDate = updateTransactionRequestDTO.targetDate,
+                    monthlyAmount = updateTransactionRequestDTO.monthlyAmount,
+                    paymentDay = updateTransactionRequestDTO.paymentDay,
+                    hasTargetDate = updateTransactionRequestDTO.hasTargetDate,
+                )
+
+            val savedTransaction = transactionRepository.save(updatedTransaction)
+            toTransactionResponseDTO(savedTransaction)
         }
 
     private fun toTransactionResponseDTO(transaction: Transaction): TransactionResponseDTO =
