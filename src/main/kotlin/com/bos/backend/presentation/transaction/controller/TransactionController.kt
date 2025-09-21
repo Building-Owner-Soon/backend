@@ -1,6 +1,6 @@
 package com.bos.backend.presentation.transaction.controller
 
-import com.bos.backend.application.transaction.RepaymentScheduleService
+import com.bos.backend.application.transaction.RepaymentService
 import com.bos.backend.application.transaction.TransactionService
 import com.bos.backend.presentation.transaction.dto.CreateRepaymentRequestDTO
 import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/transactions")
 class TransactionController(
     private val transactionService: TransactionService,
-    private val repaymentScheduleService: RepaymentScheduleService,
+    private val repaymentService: RepaymentService,
 ) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -60,7 +60,7 @@ class TransactionController(
     @ResponseStatus(HttpStatus.OK)
     suspend fun getRepaymentManagement(
         @AuthenticationPrincipal userId: String,
-    ): RepaymentManagementResponseDTO = repaymentScheduleService.getRepaymentManagement(userId.toLong())
+    ): RepaymentManagementResponseDTO = repaymentService.getRepaymentManagement(userId.toLong())
 
     @PostMapping("/{id}/repayments")
     @ResponseStatus(HttpStatus.CREATED)
@@ -68,5 +68,5 @@ class TransactionController(
         @AuthenticationPrincipal userId: String,
         @PathVariable id: Long,
         @Valid @RequestBody createRepaymentRequestDTO: CreateRepaymentRequestDTO,
-    ): RepaymentScheduleItemDTO = repaymentScheduleService.addRepayment(userId.toLong(), id, createRepaymentRequestDTO)
+    ): RepaymentScheduleItemDTO = repaymentService.addRepayment(userId.toLong(), id, createRepaymentRequestDTO)
 }

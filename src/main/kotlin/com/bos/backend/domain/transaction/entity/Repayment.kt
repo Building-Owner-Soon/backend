@@ -7,8 +7,8 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 
-@Table("repayment_schedules")
-data class RepaymentSchedule(
+@Table("repayments")
+data class Repayment(
     @Id
     val id: Long? = null,
     @Column("transaction_id")

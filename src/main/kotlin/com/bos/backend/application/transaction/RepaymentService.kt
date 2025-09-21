@@ -2,11 +2,11 @@ package com.bos.backend.application.transaction
 
 import com.bos.backend.application.CommonErrorCode
 import com.bos.backend.application.CustomException
-import com.bos.backend.domain.transaction.entity.RepaymentSchedule
+import com.bos.backend.domain.transaction.entity.Repayment
 import com.bos.backend.domain.transaction.entity.Transaction
 import com.bos.backend.domain.transaction.enum.RepaymentStatus
 import com.bos.backend.domain.transaction.enum.RepaymentType
-import com.bos.backend.domain.transaction.repository.RepaymentScheduleRepository
+import com.bos.backend.domain.transaction.repository.RepaymentRepository
 import com.bos.backend.domain.transaction.repository.TransactionRepository
 import com.bos.backend.presentation.transaction.dto.CreateRepaymentRequestDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentManagementResponseDTO
@@ -16,8 +16,8 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 @Service
-class RepaymentScheduleService(
-    private val repaymentScheduleRepository: RepaymentScheduleRepository,
+class RepaymentService(
+    private val repaymentRepository: RepaymentRepository,
     private val transactionRepository: TransactionRepository,
 ) {
     suspend fun getRepaymentManagement(userId: Long): RepaymentManagementResponseDTO {
@@ -31,7 +31,7 @@ class RepaymentScheduleService(
             )
         }
 
-        val repaymentRecords = repaymentScheduleRepository.findByTransactionIdIn(transactionIds)
+        val repaymentRecords = repaymentRepository.findByTransactionIdIn(transactionIds)
         val today = LocalDate.now()
         val repaymentItems = mutableListOf<RepaymentScheduleItemDTO>()
 
@@ -59,7 +59,7 @@ class RepaymentScheduleService(
 
     private fun generateRepaymentItems(
         transaction: Transaction,
-        repaymentRecords: List<RepaymentSchedule>,
+        repaymentRecords: List<Repayment>,
         today: LocalDate,
     ): List<RepaymentScheduleItemDTO> {
         val items = mutableListOf<RepaymentScheduleItemDTO>()
@@ -189,14 +189,14 @@ class RepaymentScheduleService(
             throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
         }
 
-        val repaymentSchedule =
-            RepaymentSchedule(
+        val repayment =
+            Repayment(
                 transactionId = transactionId,
                 repaymentDate = createRepaymentRequestDTO.repaymentDate,
                 repaymentAmount = createRepaymentRequestDTO.repaymentAmount,
             )
 
-        val savedRepayment = repaymentScheduleRepository.save(repaymentSchedule)
+        val savedRepayment = repaymentRepository.save(repayment)
 
         return RepaymentScheduleItemDTO(
             status = RepaymentStatus.COMPLETED,
