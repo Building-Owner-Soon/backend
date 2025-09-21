@@ -10,10 +10,9 @@ import com.bos.backend.presentation.transaction.dto.CreateRepaymentRequestDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentManagementResponseDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentScheduleItemDTO
 import org.springframework.stereotype.Service
-import java.time.LocalDate
 
 @Service
-class RepaymentService(
+class RepaymentScheduleService(
     private val repaymentScheduleRepository: RepaymentScheduleRepository,
     private val transactionRepository: TransactionRepository,
 ) {
@@ -30,8 +29,7 @@ class RepaymentService(
         }
 
         val repaymentSchedules = repaymentScheduleRepository.findByTransactionId(transactionId)
-        val today = LocalDate.now()
-        val repaymentItems = generateRepaymentItems(repaymentSchedules, today)
+        val repaymentItems = generateRepaymentItems(repaymentSchedules)
 
         val overdueRepayments =
             repaymentItems
@@ -49,36 +47,15 @@ class RepaymentService(
         )
     }
 
-    private fun generateRepaymentItems(
-        repaymentSchedules: List<RepaymentSchedule>,
-        today: LocalDate,
-    ): List<RepaymentScheduleItemDTO> {
-        // RepaymentSchedule 기반으로 직접 아이템 생성
+    private fun generateRepaymentItems(repaymentSchedules: List<RepaymentSchedule>): List<RepaymentScheduleItemDTO> {
         return repaymentSchedules.map { schedule ->
-            val status =
-                when (schedule.status) {
-                    RepaymentStatus.COMPLETED -> RepaymentStatus.COMPLETED
-                    else -> getScheduledStatus(schedule.scheduledDate, today)
-                }
-
             RepaymentScheduleItemDTO(
-                status = status,
+                status = schedule.status,
                 displayDate = schedule.actualDate ?: schedule.scheduledDate,
                 displayAmount = schedule.actualAmount ?: schedule.scheduledAmount,
             )
         }.sortedBy { it.displayDate }
     }
-
-    private fun getScheduledStatus(
-        scheduledDate: LocalDate,
-        today: LocalDate,
-    ): RepaymentStatus =
-        when {
-            scheduledDate.isBefore(today) -> RepaymentStatus.OVERDUE
-            scheduledDate >= today.minusDays(2) && scheduledDate <= today ->
-                RepaymentStatus.IN_PROGRESS
-            else -> RepaymentStatus.SCHEDULED
-        }
 
     suspend fun addRepayment(
         userId: Long,
@@ -105,11 +82,7 @@ class RepaymentService(
 
         val savedSchedule = repaymentScheduleRepository.save(updatedSchedule)
 
-        return RepaymentScheduleItemDTO(
-            status = RepaymentStatus.COMPLETED,
-            displayDate = savedSchedule.actualDate!!,
-            displayAmount = savedSchedule.actualAmount!!,
-        )
+        return generateRepaymentItems(listOf(savedSchedule)).first()
     }
 
     private fun validateUserAccess(

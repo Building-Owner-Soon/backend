@@ -1,6 +1,6 @@
 package com.bos.backend.presentation.transaction.controller
 
-import com.bos.backend.application.transaction.RepaymentService
+import com.bos.backend.application.transaction.RepaymentScheduleService
 import com.bos.backend.presentation.transaction.dto.RepaymentManagementResponseDTO
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/repayment-schedules")
 class RepaymentScheduleController(
-    private val repaymentService: RepaymentService,
+    private val repaymentScheduleService: RepaymentScheduleService,
 ) {
     @GetMapping("/{transactionId}")
     @ResponseStatus(HttpStatus.OK)
     suspend fun getRepaymentManagement(
         @AuthenticationPrincipal userId: String,
         @PathVariable transactionId: Long,
-    ): RepaymentManagementResponseDTO = repaymentService.getRepaymentManagement(userId.toLong(), transactionId)
+    ): RepaymentManagementResponseDTO = repaymentScheduleService.getRepaymentManagement(userId.toLong(), transactionId)
 }
