@@ -13,26 +13,12 @@ data class RepaymentSchedule(
     val id: Long? = null,
     @Column("transaction_id")
     val transactionId: Long,
-    @Column("scheduled_date")
-    val scheduledDate: LocalDate,
-    @Column("scheduled_amount")
-    val scheduledAmount: BigDecimal,
-    @Column("actual_date")
-    val actualDate: LocalDate?,
-    @Column("actual_amount")
-    val actualAmount: BigDecimal?,
+    @Column("repayment_date")
+    val repaymentDate: LocalDate,
+    @Column("repayment_amount")
+    val repaymentAmount: BigDecimal,
     @Column("created_at")
     val createdAt: Instant = Instant.now(),
     @Column("updated_at")
     val updatedAt: Instant = Instant.now(),
-) {
-    fun complete(
-        actualDate: LocalDate,
-        actualAmount: BigDecimal,
-    ): RepaymentSchedule =
-        this.copy(
-            actualDate = actualDate,
-            actualAmount = actualAmount,
-            updatedAt = Instant.now(),
-        )
-}
+)
