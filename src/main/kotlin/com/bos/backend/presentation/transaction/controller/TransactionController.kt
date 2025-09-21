@@ -1,7 +1,11 @@
 package com.bos.backend.presentation.transaction.controller
 
+import com.bos.backend.application.transaction.RepaymentScheduleService
 import com.bos.backend.application.transaction.TransactionService
+import com.bos.backend.presentation.transaction.dto.CreateRepaymentRequestDTO
 import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
+import com.bos.backend.presentation.transaction.dto.RepaymentManagementResponseDTO
+import com.bos.backend.presentation.transaction.dto.RepaymentScheduleItemDTO
 import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
 import com.bos.backend.presentation.transaction.dto.UpdateTransactionRequestDTO
 import jakarta.validation.Valid
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/transactions")
 class TransactionController(
     private val transactionService: TransactionService,
+    private val repaymentScheduleService: RepaymentScheduleService,
 ) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -50,4 +55,19 @@ class TransactionController(
         @AuthenticationPrincipal userId: String,
         @PathVariable id: Long,
     ): Unit = transactionService.deleteTransaction(userId.toLong(), id)
+
+    @GetMapping("/repayment-management")
+    @ResponseStatus(HttpStatus.OK)
+    suspend fun getRepaymentManagement(
+        @AuthenticationPrincipal userId: String,
+    ): RepaymentManagementResponseDTO = repaymentScheduleService.getRepaymentManagement(userId.toLong())
+
+    @PostMapping("/{id}/repayments")
+    @ResponseStatus(HttpStatus.CREATED)
+    suspend fun addRepayment(
+        @AuthenticationPrincipal userId: String,
+        @PathVariable id: Long,
+        @Valid @RequestBody createRepaymentRequestDTO: CreateRepaymentRequestDTO,
+    ): RepaymentScheduleItemDTO =
+        repaymentScheduleService.addRepayment(userId.toLong(), id, createRepaymentRequestDTO)
 }
