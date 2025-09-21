@@ -31,4 +31,8 @@ enum class CommonErrorCode(
         "잘못된 요청입니다.",
         HttpStatus.BAD_REQUEST,
     ),
+    RESOURCE_NOT_FOUND(
+        "요청한 리소스를 찾을 수 없습니다.",
+        HttpStatus.NOT_FOUND,
+    ),
 }

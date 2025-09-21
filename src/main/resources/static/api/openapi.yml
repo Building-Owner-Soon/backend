@@ -11,6 +11,7 @@ tags:
   - name: user
   - name: profile
   - name: notification
+  - name: transaction
 paths:
   /auth/sign-in:
     post:
@@ -440,6 +441,88 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnreadCountResponse"
+  /transactions:
+    post:
+      tags:
+        - transaction
+      operationId: createTransaction
+      summary: "거래 생성"
+      description: |-
+        새로운 거래를 생성합니다.
+
+        ## 거래 유형
+        - LEND: 갚을돈 (내가 빌려준 돈)
+        - BORROW: 받을돈 (내가 빌린 돈)
+
+        ## 관계 유형
+        - PARENT: 부모님
+        - SIBLING: 형제자매
+        - FRIEND: 친구
+        - LOVER: 애인
+        - OTHER: 기타 (customRelationship 필드 사용)
+
+        ## 상환 유형
+        - BY_DATE: 날짜로 상환
+        - BY_MONTHLY: 월별 상환
+        - FLEXIBLE: 유연한 상환
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransactionRequest"
+      responses:
+        "201":
+          description: 거래 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestResponseSpec"
+        "401":
+          description: 인증 실패
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
+  /transactions/{id}:
+    get:
+      tags:
+        - transaction
+      operationId: getTransactionDetail
+      summary: "거래 상세 조회"
+      description: |-
+        특정 거래의 상세 정보를 조회합니다.
+
+        - 본인이 생성한 거래만 조회 가능합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: 거래 ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: 거래 상세 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResponse"
+        "401":
+          description: 인증 실패
+        "404":
+          description: 거래를 찾을 수 없음
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/BaseProblemDetails"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
 components:
   securitySchemes:
     BearerAuth:
@@ -1071,6 +1154,221 @@ components:
           format: int64
           description: 읽지 않은 알림 수
           example: 5
+    TransactionType:
+      type: string
+      enum:
+        - LEND
+        - BORROW
+      description: |-
+        거래 유형
+        - LEND: 갚을돈 (내가 빌려준 돈)
+        - BORROW: 받을돈 (내가 빌린 돈)
+      example: LEND
+    RelationshipType:
+      type: string
+      enum:
+        - PARENT
+        - SIBLING
+        - FRIEND
+        - LOVER
+        - OTHER
+      description: |-
+        관계 유형
+        - PARENT: 부모님
+        - SIBLING: 형제자매
+        - FRIEND: 친구
+        - LOVER: 애인
+        - OTHER: 기타 (customRelationship 필드 사용)
+      example: FRIEND
+    RepaymentType:
+      type: string
+      enum:
+        - BY_DATE
+        - BY_MONTHLY
+        - FLEXIBLE
+      description: |-
+        상환 유형
+        - BY_DATE: 날짜로 상환
+        - BY_MONTHLY: 월별 상환
+        - FLEXIBLE: 유연한 상환
+      example: BY_DATE
+    CreateTransactionRequest:
+      type: object
+      required:
+        - transactionType
+        - counterpartName
+        - counterpartCharacter
+        - relationship
+        - transactionDate
+        - totalAmount
+        - repaymentType
+      properties:
+        transactionType:
+          $ref: "#/components/schemas/TransactionType"
+        counterpartName:
+          type: string
+          description: 상대방 이름
+          example: "홍길동"
+          maxLength: 12
+        counterpartCharacter:
+          $ref: "#/components/schemas/Character"
+        relationship:
+          $ref: "#/components/schemas/RelationshipType"
+        customRelationship:
+          type: string
+          nullable: true
+          description: 기타 관계 (relationship이 OTHER일 때 사용)
+          example: "동업자"
+        transactionDate:
+          type: string
+          format: date
+          description: 거래일
+          example: "2025-01-15"
+        totalAmount:
+          type: number
+          format: decimal
+          description: 총 거래 금액
+          example: 100000
+          minimum: 10000
+        completedAmount:
+          type: number
+          format: decimal
+          nullable: true
+          description: 현재까지 완료된 금액
+          example: 0
+          minimum: 0
+        memo:
+          type: string
+          nullable: true
+          description: 거래 메모
+          example: "급하게 빌린 돈"
+        repaymentType:
+          $ref: "#/components/schemas/RepaymentType"
+        targetDate:
+          type: string
+          format: date
+          nullable: true
+          description: 완료 예정일
+          example: "2025-03-15"
+        monthlyAmount:
+          type: number
+          format: decimal
+          nullable: true
+          description: 월 납부 금액
+          example: 50000
+          minimum: 0
+        paymentDay:
+          type: integer
+          nullable: true
+          description: 매달 납부일 (1-31)
+          example: 15
+          minimum: 1
+          maximum: 31
+        hasTargetDate:
+          type: boolean
+          nullable: true
+          description: 완료일 설정 여부
+          example: true
+    TransactionResponse:
+      type: object
+      required:
+        - id
+        - transactionType
+        - counterpartName
+        - counterpartCharacter
+        - relationship
+        - transactionDate
+        - totalAmount
+        - completedAmount
+        - remainingAmount
+        - repaymentType
+        - isCompleted
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 거래 ID
+          example: 123
+        transactionType:
+          $ref: "#/components/schemas/TransactionType"
+        counterpartName:
+          type: string
+          description: 상대방 이름
+          example: "홍길동"
+        counterpartCharacter:
+          $ref: "#/components/schemas/Character"
+        relationship:
+          $ref: "#/components/schemas/RelationshipType"
+        customRelationship:
+          type: string
+          nullable: true
+          description: 기타 관계
+          example: "동업자"
+        transactionDate:
+          type: string
+          format: date
+          description: 거래일
+          example: "2025-01-15"
+        totalAmount:
+          type: number
+          format: decimal
+          description: 총 거래 금액
+          example: 100000
+        completedAmount:
+          type: number
+          format: decimal
+          description: 현재까지 완료된 금액
+          example: 30000
+        remainingAmount:
+          type: number
+          format: decimal
+          description: 잔여 금액
+          example: 70000
+        memo:
+          type: string
+          nullable: true
+          description: 거래 메모
+          example: "급하게 빌린 돈"
+        repaymentType:
+          $ref: "#/components/schemas/RepaymentType"
+        targetDate:
+          type: string
+          format: date
+          nullable: true
+          description: 완료 예정일
+          example: "2025-03-15"
+        monthlyAmount:
+          type: number
+          format: decimal
+          nullable: true
+          description: 월 납부 금액
+          example: 50000
+        paymentDay:
+          type: integer
+          nullable: true
+          description: 매달 납부일
+          example: 15
+        hasTargetDate:
+          type: boolean
+          nullable: true
+          description: 완료일 설정 여부
+          example: true
+        isCompleted:
+          type: boolean
+          description: 완료 여부
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: 생성 일시
+          example: "2025-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: 수정 일시
+          example: "2025-01-15T10:30:00Z"
 
   requestBodies:
     SignUpRequestSpec:

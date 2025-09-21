@@ -32,5 +32,4 @@ class TransactionController(
         @AuthenticationPrincipal userId: String,
         @PathVariable id: Long,
     ): TransactionResponseDTO = transactionService.getTransactionDetail(userId.toLong(), id)
-
 }
