@@ -68,6 +68,5 @@ class TransactionController(
         @AuthenticationPrincipal userId: String,
         @PathVariable id: Long,
         @Valid @RequestBody createRepaymentRequestDTO: CreateRepaymentRequestDTO,
-    ): RepaymentScheduleItemDTO =
-        repaymentScheduleService.addRepayment(userId.toLong(), id, createRepaymentRequestDTO)
+    ): RepaymentScheduleItemDTO = repaymentScheduleService.addRepayment(userId.toLong(), id, createRepaymentRequestDTO)
 }
