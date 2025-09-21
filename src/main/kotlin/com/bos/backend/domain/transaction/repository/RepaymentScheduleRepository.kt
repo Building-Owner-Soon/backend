@@ -24,9 +24,4 @@ interface RepaymentScheduleRepository {
         inProgressStatus: RepaymentStatus = RepaymentStatus.IN_PROGRESS,
         scheduledStatus: RepaymentStatus = RepaymentStatus.SCHEDULED,
     ): Int
-
-    suspend fun findSchedulesToUpdate(
-        scheduledStatus: RepaymentStatus = RepaymentStatus.SCHEDULED,
-        inProgressStatus: RepaymentStatus = RepaymentStatus.IN_PROGRESS,
-    ): List<RepaymentSchedule>
 }

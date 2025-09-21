@@ -34,7 +34,7 @@ interface R2dbcRepaymentScheduleRepository :
         UPDATE repayment_schedules
         SET status = :inProgressStatus, updated_at = CURRENT_TIMESTAMP
         WHERE scheduled_date >= :startDate
-        AND scheduled_date <= :endDate
+        AND scheduled_date < :endDate
         AND status = :scheduledStatus
         """,
     )
@@ -44,16 +44,4 @@ interface R2dbcRepaymentScheduleRepository :
         inProgressStatus: RepaymentStatus,
         scheduledStatus: RepaymentStatus,
     ): Int
-
-    @Query(
-        """
-        SELECT * FROM repayment_schedules
-        WHERE status IN (:scheduledStatus, :inProgressStatus)
-        ORDER BY scheduled_date
-        """,
-    )
-    override suspend fun findSchedulesToUpdate(
-        scheduledStatus: RepaymentStatus,
-        inProgressStatus: RepaymentStatus,
-    ): List<RepaymentSchedule>
 }

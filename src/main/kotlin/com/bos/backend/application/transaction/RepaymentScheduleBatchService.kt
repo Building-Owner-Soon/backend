@@ -14,7 +14,7 @@ class RepaymentScheduleBatchService(
 ) {
     private val logger = LoggerFactory.getLogger(RepaymentScheduleBatchService::class.java)
 
-    @Scheduled(cron = "0 30 0 * * *") // 매일 새벽 0시 30분에 실행
+    @Scheduled(cron = "0 30 0 * * *")
     fun updateRepaymentStatuses() {
         runBlocking {
             try {
@@ -23,17 +23,15 @@ class RepaymentScheduleBatchService(
                 val today = LocalDate.now()
                 val twoDaysAgo = today.minusDays(2)
 
-                // 1. 연체 상태 업데이트 (scheduled_date < today)
                 val overdueCount =
                     repaymentScheduleRepository.updateOverdueStatuses(
-                        today,
+                        twoDaysAgo,
                         RepaymentStatus.OVERDUE,
                         RepaymentStatus.SCHEDULED,
                         RepaymentStatus.IN_PROGRESS,
                     )
                 logger.info("Updated {} schedules to OVERDUE status", overdueCount)
 
-                // 2. 진행중 상태 업데이트 (today-2 <= scheduled_date <= today)
                 val inProgressCount =
                     repaymentScheduleRepository.updateInProgressStatuses(
                         twoDaysAgo,
@@ -51,26 +49,6 @@ class RepaymentScheduleBatchService(
                 )
             } catch (e: RuntimeException) {
                 logger.error("Error occurred during repayment schedule status update batch job", e)
-            }
-        }
-    }
-
-    @Scheduled(cron = "0 0 1 * * MON") // 매주 월요일 새벽 1시에 실행
-    fun logRepaymentStatusSummary() {
-        runBlocking {
-            try {
-                logger.info("Starting weekly repayment schedule summary")
-
-                val schedulesToUpdate =
-                    repaymentScheduleRepository.findSchedulesToUpdate(
-                        RepaymentStatus.SCHEDULED,
-                        RepaymentStatus.IN_PROGRESS,
-                    )
-                val statusCount = schedulesToUpdate.groupingBy { it.status }.eachCount()
-
-                logger.info("Weekly repayment schedule summary: {}", statusCount)
-            } catch (e: RuntimeException) {
-                logger.error("Error occurred during weekly repayment schedule summary", e)
             }
         }
     }
