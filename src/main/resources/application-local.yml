@@ -1,3 +1,0 @@
-spring:
-  flyway:
-    baseline-version: 0
