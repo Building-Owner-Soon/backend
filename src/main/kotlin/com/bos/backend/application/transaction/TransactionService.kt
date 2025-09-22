@@ -99,20 +99,11 @@ class TransactionService(
 
             val updatedTransaction =
                 existingTransaction.copy(
-                    transactionType = updateTransactionRequestDTO.transactionType,
                     counterpartName = updateTransactionRequestDTO.counterpartName,
                     counterpartCharacter = updateTransactionRequestDTO.counterpartCharacter,
                     relationship = updateTransactionRequestDTO.relationship,
                     customRelationship = updateTransactionRequestDTO.customRelationship,
-                    transactionDate = updateTransactionRequestDTO.transactionDate,
-                    totalAmount = updateTransactionRequestDTO.totalAmount,
-                    completedAmount = updateTransactionRequestDTO.completedAmount ?: BigDecimal.ZERO,
                     memo = updateTransactionRequestDTO.memo,
-                    repaymentType = updateTransactionRequestDTO.repaymentType,
-                    targetDate = updateTransactionRequestDTO.targetDate,
-                    monthlyAmount = updateTransactionRequestDTO.monthlyAmount,
-                    paymentDay = updateTransactionRequestDTO.paymentDay,
-                    hasTargetDate = updateTransactionRequestDTO.hasTargetDate,
                 )
 
             val savedTransaction = transactionRepository.save(updatedTransaction)
