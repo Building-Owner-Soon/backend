@@ -4,6 +4,7 @@ import com.bos.backend.application.transaction.RepaymentScheduleService
 import com.bos.backend.application.transaction.TransactionService
 import com.bos.backend.presentation.transaction.dto.CreateRepaymentRequestDTO
 import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
+import com.bos.backend.presentation.transaction.dto.RepaymentManagementResponseDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentScheduleItemDTO
 import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
 import com.bos.backend.presentation.transaction.dto.UpdateTransactionRequestDTO
@@ -54,6 +55,13 @@ class TransactionController(
         @AuthenticationPrincipal userId: String,
         @PathVariable id: Long,
     ): Unit = transactionService.deleteTransaction(userId.toLong(), id)
+
+    @GetMapping("/{id}/repayment-schedules")
+    @ResponseStatus(HttpStatus.OK)
+    suspend fun getRepaymentManagement(
+        @AuthenticationPrincipal userId: String,
+        @PathVariable id: Long,
+    ): RepaymentManagementResponseDTO = repaymentScheduleService.getRepaymentManagement(userId.toLong(), id)
 
     @PostMapping("/{id}/repayments")
     @ResponseStatus(HttpStatus.CREATED)
