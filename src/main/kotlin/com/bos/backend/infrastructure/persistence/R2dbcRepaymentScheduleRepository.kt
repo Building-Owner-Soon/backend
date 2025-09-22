@@ -34,7 +34,7 @@ interface R2dbcRepaymentScheduleRepository :
         UPDATE repayment_schedules
         SET status = :inProgressStatus, updated_at = CURRENT_TIMESTAMP
         WHERE scheduled_date >= :startDate
-        AND scheduled_date < :endDate
+        AND scheduled_date <= :endDate
         AND status = :scheduledStatus
         """,
     )

@@ -12,6 +12,7 @@ tags:
   - name: profile
   - name: notification
   - name: transaction
+  - name: repayment
 paths:
   /auth/sign-in:
     post:
@@ -610,6 +611,46 @@ paths:
                 $ref: "#/components/schemas/RepaymentManagementResponse"
         "401":
           description: 인증 실패
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
+  /repayment-schedules/{transactionId}:
+    get:
+      tags:
+        - repayment
+      operationId: getRepaymentSchedules
+      summary: "상환 스케줄 조회"
+      description: |-
+        특정 거래의 상환 스케줄 목록을 조회합니다.
+        ## 응답 구조
+        - **overdueRepayments**: 연체된 상환 목록 (OVERDUE 상태)
+        - **regularRepayments**: 정규 상환 목록 (SCHEDULED, IN_PROGRESS, COMPLETED 상태)
+        ## 상환 상태별 표시 정보
+        - **SCHEDULED**: 예정된 상환 (납부일이 오늘 이후)
+        - **IN_PROGRESS**: 진행중인 상환 (납부일이 2일 전~오늘)
+        - **OVERDUE**: 연체된 상환 (납부일이 2일 전 이전)
+        - **COMPLETED**: 완료된 상환 (실제 납부 완료)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: 거래 ID
+          example: 123
+      responses:
+        "200":
+          description: 상환 스케줄 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepaymentManagementResponse"
+        "401":
+          description: 인증 실패
+        "404":
+          description: 거래를 찾을 수 없음
         "500":
           $ref: "#/components/responses/InternalServerErrorResponseSpec"
   /transactions/{id}/repayments:
@@ -1311,15 +1352,29 @@ components:
     RepaymentType:
       type: string
       enum:
-        - BY_DATE
-        - BY_MONTHLY
+        - DIVIDED_BY_PERIOD
+        - FIXED_MONTHLY
         - FLEXIBLE
       description: |-
         상환 유형
-        - BY_DATE: 날짜로 상환
-        - BY_MONTHLY: 월별 상환
-        - FLEXIBLE: 유연한 상환
-      example: BY_DATE
+        - DIVIDED_BY_PERIOD: 기간별 분할 상환 (목표일까지 균등 분할)
+        - FIXED_MONTHLY: 고정 월납 상환 (매월 고정 금액)
+        - FLEXIBLE: 유연한 상환 (자유 납부)
+      example: FIXED_MONTHLY
+    RepaymentStatus:
+      type: string
+      enum:
+        - SCHEDULED
+        - IN_PROGRESS
+        - OVERDUE
+        - COMPLETED
+      description: |-
+        상환 상태
+        - SCHEDULED: 예정됨 (납부일이 오늘 이후)
+        - IN_PROGRESS: 진행중 (납부일이 2일 전~오늘)
+        - OVERDUE: 연체됨 (납부일이 2일 전 이전)
+        - COMPLETED: 완료됨 (실제 납부 완료)
+      example: SCHEDULED
     CreateTransactionRequest:
       type: object
       required:
