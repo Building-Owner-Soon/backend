@@ -126,18 +126,16 @@ class TransactionService(
     }
 
     private fun generateDividedByPeriodSchedules(transaction: Transaction): List<RepaymentSchedule> {
-        val targetDate = transaction.targetDate ?: return emptyList()
-        val paymentDay = transaction.paymentDay ?: 1
+        val targetDate = transaction.targetDate ?: throw CustomException(CommonErrorCode.INVALID_PARAMETER)
+        val paymentDay = transaction.paymentDay ?: throw CustomException(CommonErrorCode.INVALID_PARAMETER)
         val totalAmount = transaction.totalAmount
 
         val schedules = mutableListOf<RepaymentSchedule>()
-        var currentDate = transaction.createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-
-        if (currentDate.dayOfMonth > paymentDay) {
-            currentDate = currentDate.plusMonths(1).withDayOfMonth(paymentDay)
-        } else {
-            currentDate = currentDate.withDayOfMonth(paymentDay)
-        }
+        var currentDate =
+            calculateNextPaymentDate(
+                transaction.createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate(),
+                paymentDay,
+            )
 
         val monthsList = mutableListOf<LocalDate>()
         while (currentDate.isBefore(targetDate) || currentDate.isEqual(targetDate)) {
@@ -170,19 +168,17 @@ class TransactionService(
     }
 
     private fun generateFixedMonthlySchedules(transaction: Transaction): List<RepaymentSchedule> {
-        val monthlyAmount = transaction.monthlyAmount ?: return emptyList()
-        val paymentDay = transaction.paymentDay ?: 1
+        val monthlyAmount = transaction.monthlyAmount ?: throw CustomException(CommonErrorCode.INVALID_PARAMETER)
+        val paymentDay = transaction.paymentDay ?: throw CustomException(CommonErrorCode.INVALID_PARAMETER)
         val totalAmount = transaction.totalAmount
 
         val schedules = mutableListOf<RepaymentSchedule>()
-        var currentDate = transaction.createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+        var currentDate =
+            calculateNextPaymentDate(
+                transaction.createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate(),
+                paymentDay,
+            )
         var remainingAmount = totalAmount
-
-        if (currentDate.dayOfMonth > paymentDay) {
-            currentDate = currentDate.plusMonths(1).withDayOfMonth(paymentDay)
-        } else {
-            currentDate = currentDate.withDayOfMonth(paymentDay)
-        }
 
         while (remainingAmount > BigDecimal.ZERO) {
             val paymentAmount = if (remainingAmount < monthlyAmount) remainingAmount else monthlyAmount
@@ -201,6 +197,16 @@ class TransactionService(
 
         return schedules
     }
+
+    private fun calculateNextPaymentDate(
+        baseDate: LocalDate,
+        paymentDay: Int,
+    ): LocalDate =
+        if (baseDate.dayOfMonth > paymentDay) {
+            baseDate.plusMonths(1).withDayOfMonth(paymentDay)
+        } else {
+            baseDate.withDayOfMonth(paymentDay)
+        }
 
     private fun toTransactionResponseDTO(transaction: Transaction): TransactionResponseDTO =
         TransactionResponseDTO(
