@@ -226,7 +226,6 @@ class TransactionService(
             monthlyAmount = transaction.monthlyAmount,
             paymentDay = transaction.paymentDay,
             hasTargetDate = transaction.hasTargetDate,
-            isCompleted = transaction.isCompleted(),
             createdAt = transaction.createdAt,
             updatedAt = transaction.updatedAt,
         )

@@ -1549,7 +1549,6 @@ components:
         - completedAmount
         - remainingAmount
         - repaymentType
-        - isCompleted
         - createdAt
         - updatedAt
       properties:
@@ -1622,10 +1621,6 @@ components:
           nullable: true
           description: 완료일 설정 여부
           example: true
-        isCompleted:
-          type: boolean
-          description: 완료 여부
-          example: false
         createdAt:
           type: string
           format: date-time
