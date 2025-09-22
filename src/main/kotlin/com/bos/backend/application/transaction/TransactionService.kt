@@ -142,7 +142,7 @@ class TransactionService(
         val totalAmount = transaction.totalAmount
 
         val schedules = mutableListOf<RepaymentSchedule>()
-        var currentDate = transaction.transactionDate
+        var currentDate = transaction.createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
 
         if (currentDate.dayOfMonth > paymentDay) {
             currentDate = currentDate.plusMonths(1).withDayOfMonth(paymentDay)
@@ -186,7 +186,7 @@ class TransactionService(
         val totalAmount = transaction.totalAmount
 
         val schedules = mutableListOf<RepaymentSchedule>()
-        var currentDate = transaction.transactionDate
+        var currentDate = transaction.createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
         var remainingAmount = totalAmount
 
         if (currentDate.dayOfMonth > paymentDay) {
