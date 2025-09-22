@@ -7,6 +7,8 @@ import java.time.LocalDate
 interface RepaymentScheduleRepository {
     suspend fun save(repaymentSchedule: RepaymentSchedule): RepaymentSchedule
 
+    suspend fun saveAll(repaymentSchedules: List<RepaymentSchedule>): List<RepaymentSchedule>
+
     suspend fun findById(id: Long): RepaymentSchedule?
 
     suspend fun findByTransactionId(transactionId: Long): List<RepaymentSchedule>

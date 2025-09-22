@@ -119,12 +119,10 @@ class TransactionService(
             when (transaction.repaymentType) {
                 RepaymentType.DIVIDED_BY_PERIOD -> generateDividedByPeriodSchedules(transaction)
                 RepaymentType.FIXED_MONTHLY -> generateFixedMonthlySchedules(transaction)
-                RepaymentType.FLEXIBLE -> emptyList()
+                else -> emptyList()
             }
 
-        for (schedule in schedules) {
-            repaymentScheduleRepository.save(schedule)
-        }
+        repaymentScheduleRepository.saveAll(schedules)
     }
 
     private fun generateDividedByPeriodSchedules(transaction: Transaction): List<RepaymentSchedule> {
