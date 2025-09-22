@@ -9,4 +9,8 @@ interface JwtService {
     fun validateToken(token: String): Boolean
 
     fun getUserIdFromToken(token: String): Long
+
+    fun hashToken(token: String): String
+
+    fun validateTokenFormat(token: String): Boolean
 }

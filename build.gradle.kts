@@ -1,3 +1,4 @@
+
 plugins {
     kotlin("jvm") version "1.9.23"
     kotlin("kapt") version "1.9.23"
@@ -51,6 +52,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
+    // flyway
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-mysql")
+    implementation("org.mariadb.jdbc:mariadb-java-client")
+
     // kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
@@ -74,10 +80,6 @@ dependencies {
     // util
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
-    // zalando
-    implementation("org.zalando:problem-spring-web:0.29.1")
-    implementation("org.zalando:jackson-datatype-problem:0.27.0")
-
     // mapstruct
     implementation("org.mapstruct:mapstruct:${property("MAPSTRUCT_VERSION")}")
     kapt("org.mapstruct:mapstruct-processor:${property("MAPSTRUCT_VERSION")}")
@@ -94,6 +96,10 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.testcontainers:r2dbc")
+    testImplementation("org.testcontainers:mariadb")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testRuntimeOnly("com.h2database:h2")
+    testRuntimeOnly("io.r2dbc:r2dbc-h2")
 }
 
 dependencyManagement {
