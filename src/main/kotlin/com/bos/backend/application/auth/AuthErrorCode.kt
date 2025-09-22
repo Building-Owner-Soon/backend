@@ -35,4 +35,16 @@ enum class AuthErrorCode(
         "유효하지 않은 토큰입니다.",
         HttpStatus.UNAUTHORIZED,
     ),
+    REFRESH_TOKEN_NOT_FOUND(
+        "리프레시 토큰을 찾을 수 없습니다.",
+        HttpStatus.BAD_REQUEST,
+    ),
+    REFRESH_TOKEN_EXPIRED(
+        "리프레시 토큰이 만료되었습니다.",
+        HttpStatus.UNAUTHORIZED,
+    ),
+    REFRESH_TOKEN_REVOKED(
+        "리프레시 토큰이 폐기되었습니다.",
+        HttpStatus.UNAUTHORIZED,
+    ),
 }
