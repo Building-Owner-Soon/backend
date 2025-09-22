@@ -12,7 +12,6 @@ tags:
   - name: profile
   - name: notification
   - name: transaction
-  - name: repayment
 paths:
   /auth/sign-in:
     post:
@@ -527,9 +526,9 @@ paths:
       tags:
         - transaction
       operationId: createTransaction
-      summary: "거래 생성"
+      summary: "거래내역 생성"
       description: |-
-        새로운 거래를 생성합니다.
+        새로운 거래내역을 생성합니다.
 
         ## 거래 유형
         - LEND: 갚을돈 (내가 빌려준 돈)
@@ -556,7 +555,7 @@ paths:
               $ref: "#/components/schemas/CreateTransactionRequest"
       responses:
         "201":
-          description: 거래 생성 성공
+          description: 거래내역 생성 성공
           content:
             application/json:
               schema:
@@ -572,11 +571,11 @@ paths:
       tags:
         - transaction
       operationId: getTransactionDetail
-      summary: "거래 상세 조회"
+      summary: "거래내역 조회"
       description: |-
-        특정 거래의 상세 정보를 조회합니다.
+        특정 거래내역의 상세 정보를 조회합니다.
 
-        - 본인이 생성한 거래만 조회 가능합니다.
+        - 본인이 생성한 거래내역만 조회 가능합니다.
       security:
         - BearerAuth: []
       parameters:
@@ -589,7 +588,7 @@ paths:
             format: int64
       responses:
         "200":
-          description: 거래 상세 조회 성공
+          description: 거래내역 조회 성공
           content:
             application/json:
               schema:
@@ -597,16 +596,16 @@ paths:
         "401":
           description: 인증 실패
         "404":
-          description: 거래를 찾을 수 없음
+          description: 거래내역을 찾을 수 없음
     put:
       tags:
         - transaction
       operationId: updateTransaction
-      summary: "거래 수정"
+      summary: "거래내역 수정"
       description: |-
-        특정 거래의 정보를 수정합니다.
-        - 본인이 생성한 거래만 수정 가능합니다.
-        - 모든 필드를 포함하여 전체 업데이트됩니다.
+        특정 거래내역의 정보를 수정합니다.
+        - 본인이 생성한 거래내역만 수정 가능합니다.
+        - 상대방 이름, 캐릭터, 관계, 메모만 수정 가능합니다.
       security:
         - BearerAuth: []
       parameters:
@@ -625,7 +624,7 @@ paths:
               $ref: "#/components/schemas/UpdateTransactionRequest"
       responses:
         "200":
-          description: 거래 수정 성공
+          description: 거래내역 수정 성공
           content:
             application/json:
               schema:
@@ -635,16 +634,16 @@ paths:
         "401":
           description: 인증 실패
         "404":
-          description: 거래를 찾을 수 없음
+          description: 거래내역을 찾을 수 없음
     delete:
       tags:
         - transaction
       operationId: deleteTransaction
-      summary: "거래 삭제"
+      summary: "거래내역 삭제"
       description: |-
-        특정 거래를 삭제합니다.
-        - 본인이 생성한 거래만 삭제 가능합니다.
-        - 거래 삭제 시 연관된 상환 일정도 모두 삭제됩니다.
+        특정 거래내역을 삭제합니다.
+        - 본인이 생성한 거래내역만 삭제 가능합니다.
+        - 거래내역 삭제 시 연관된 상환 일정도 모두 삭제됩니다.
       security:
         - BearerAuth: []
       parameters:
@@ -657,19 +656,19 @@ paths:
             format: int64
       responses:
         "204":
-          description: 거래 삭제 성공
+          description: 거래내역 삭제 성공
         "401":
           description: 인증 실패
         "404":
-          description: 거래를 찾을 수 없음
-  /transactions/repayment-management:
+          description: 거래내역을 찾을 수 없음
+  /transactions/{id}/repayment-schedules:
     get:
       tags:
         - transaction
       operationId: getRepaymentManagement
       summary: "상환 관리 조회"
       description: |-
-        상환 관리 페이지를 위한 상환 일정 목록을 조회합니다.
+        특정 거래내역의 상환 관리 정보를 조회합니다.
 
         ## 응답 구조
         - **overdueRepayments**: 지연된 상환 목록 (예정일이 지난 미완료 상환)
@@ -682,37 +681,8 @@ paths:
         - **COMPLETED** (완료): 실제 완료일, 실제 금액
       security:
         - BearerAuth: []
-      responses:
-        "200":
-          description: 상환 관리 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RepaymentManagementResponse"
-        "401":
-          description: 인증 실패
-        "500":
-          $ref: "#/components/responses/InternalServerErrorResponseSpec"
-  /repayment-schedules/{transactionId}:
-    get:
-      tags:
-        - repayment
-      operationId: getRepaymentSchedules
-      summary: "상환 스케줄 조회"
-      description: |-
-        특정 거래의 상환 스케줄 목록을 조회합니다.
-        ## 응답 구조
-        - **overdueRepayments**: 연체된 상환 목록 (OVERDUE 상태)
-        - **regularRepayments**: 정규 상환 목록 (SCHEDULED, IN_PROGRESS, COMPLETED 상태)
-        ## 상환 상태별 표시 정보
-        - **SCHEDULED**: 예정된 상환 (납부일이 오늘 이후)
-        - **IN_PROGRESS**: 진행중인 상환 (납부일이 2일 전~오늘)
-        - **OVERDUE**: 연체된 상환 (납부일이 2일 전 이전)
-        - **COMPLETED**: 완료된 상환 (실제 납부 완료)
-      security:
-        - BearerAuth: []
       parameters:
-        - name: transactionId
+        - name: id
           in: path
           required: true
           schema:
@@ -722,7 +692,7 @@ paths:
           example: 123
       responses:
         "200":
-          description: 상환 스케줄 조회 성공
+          description: 상환 관리 조회 성공
           content:
             application/json:
               schema:
@@ -730,25 +700,33 @@ paths:
         "401":
           description: 인증 실패
         "404":
-          description: 거래를 찾을 수 없음
+          description: 거래내역을 찾을 수 없음
         "500":
           $ref: "#/components/responses/InternalServerErrorResponseSpec"
-  /transactions/{id}/repayments:
+  /transactions/{transactionId}/schedules/{scheduleId}/repayments:
     post:
       tags:
         - transaction
       operationId: addRepayment
-      summary: "상환 기록 추가"
+      summary: "상환 처리"
       description: |-
-        특정 거래에 대한 상환 기록을 추가합니다.
-        - 본인이 생성한 거래에만 상환 기록을 추가할 수 있습니다.
-        - 상환 기록은 실제로 돈을 갚았을 때 추가합니다.
+        특정 거래내역의 특정 회차에 대한 상환을 처리합니다.
+        - 본인이 생성한 거래내역에만 상환 처리를 할 수 있습니다.
+        - 상환 처리는 실제로 돈을 갚았을 때 등록합니다.
+        - scheduleId는 상환관리 조회 API에서 획득할 수 있습니다.
       security:
         - BearerAuth: []
       parameters:
-        - name: id
+        - name: transactionId
           in: path
           description: 거래 ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: scheduleId
+          in: path
+          description: 상환 스케줄 ID
           required: true
           schema:
             type: integer
@@ -761,7 +739,7 @@ paths:
               $ref: "#/components/schemas/CreateRepaymentRequest"
       responses:
         "201":
-          description: 상환 기록 추가 성공
+          description: 상환 처리 성공
           content:
             application/json:
               schema:
@@ -771,7 +749,7 @@ paths:
         "401":
           description: 인증 실패
         "404":
-          description: 거래를 찾을 수 없음
+          description: 거래내역을 찾을 수 없음
 components:
   securitySchemes:
     BearerAuth:
@@ -1535,16 +1513,10 @@ components:
     UpdateTransactionRequest:
       type: object
       required:
-        - transactionType
         - counterpartName
         - counterpartCharacter
         - relationship
-        - transactionDate
-        - totalAmount
-        - repaymentType
       properties:
-        transactionType:
-          $ref: "#/components/schemas/TransactionType"
         counterpartName:
           type: string
           description: 상대방 이름
@@ -1559,56 +1531,11 @@ components:
           nullable: true
           description: 기타 관계 (relationship이 OTHER일 때 사용)
           example: "동업자"
-        transactionDate:
-          type: string
-          format: date
-          description: 거래일
-          example: "2025-01-15"
-        totalAmount:
-          type: number
-          format: decimal
-          description: 총 거래 금액
-          example: 100000
-          minimum: 10000
-        completedAmount:
-          type: number
-          format: decimal
-          nullable: true
-          description: 현재까지 완료된 금액
-          example: 0
-          minimum: 0
         memo:
           type: string
           nullable: true
           description: 거래 메모
           example: "급하게 빌린 돈"
-        repaymentType:
-          $ref: "#/components/schemas/RepaymentType"
-        targetDate:
-          type: string
-          format: date
-          nullable: true
-          description: 완료 예정일
-          example: "2025-03-15"
-        monthlyAmount:
-          type: number
-          format: decimal
-          nullable: true
-          description: 월 납부 금액
-          example: 50000
-          minimum: 0
-        paymentDay:
-          type: integer
-          nullable: true
-          description: 매달 납부일 (1-31)
-          example: 15
-          minimum: 1
-          maximum: 31
-        hasTargetDate:
-          type: boolean
-          nullable: true
-          description: 완료일 설정 여부
-          example: true
     TransactionResponse:
       type: object
       required:
@@ -1622,7 +1549,6 @@ components:
         - completedAmount
         - remainingAmount
         - repaymentType
-        - isCompleted
         - createdAt
         - updatedAt
       properties:
@@ -1695,10 +1621,6 @@ components:
           nullable: true
           description: 완료일 설정 여부
           example: true
-        isCompleted:
-          type: boolean
-          description: 완료 여부
-          example: false
         createdAt:
           type: string
           format: date-time
@@ -1712,10 +1634,16 @@ components:
     RepaymentScheduleItem:
       type: object
       required:
+        - id
         - status
         - displayDate
         - displayAmount
       properties:
+        id:
+          type: integer
+          format: int64
+          description: 상환 스케줄 ID
+          example: 456
         status:
           $ref: "#/components/schemas/RepaymentStatus"
         displayDate:

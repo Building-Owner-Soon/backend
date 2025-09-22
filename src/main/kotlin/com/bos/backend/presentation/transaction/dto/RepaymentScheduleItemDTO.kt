@@ -5,6 +5,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 data class RepaymentScheduleItemDTO(
+    val id: Long,
     val status: RepaymentStatus,
     val displayDate: LocalDate,
     val displayAmount: BigDecimal,

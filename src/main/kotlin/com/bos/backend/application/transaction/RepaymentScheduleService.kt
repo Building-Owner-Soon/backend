@@ -3,6 +3,7 @@ package com.bos.backend.application.transaction
 import com.bos.backend.application.CommonErrorCode
 import com.bos.backend.application.CustomException
 import com.bos.backend.domain.transaction.entity.RepaymentSchedule
+import com.bos.backend.domain.transaction.entity.Transaction
 import com.bos.backend.domain.transaction.enum.RepaymentStatus
 import com.bos.backend.domain.transaction.enum.RepaymentType
 import com.bos.backend.domain.transaction.repository.RepaymentScheduleRepository
@@ -56,6 +57,7 @@ class RepaymentScheduleService(
         repaymentSchedules
             .map { schedule ->
                 RepaymentScheduleItemDTO(
+                    id = schedule.id!!,
                     status = schedule.status,
                     displayDate = schedule.actualDate ?: schedule.scheduledDate,
                     displayAmount = schedule.actualAmount ?: schedule.scheduledAmount,
@@ -64,6 +66,7 @@ class RepaymentScheduleService(
 
     suspend fun addRepayment(
         userId: Long,
+        transactionId: Long,
         scheduleId: Long,
         createRepaymentRequestDTO: CreateRepaymentRequestDTO,
     ): RepaymentScheduleItemDTO {
@@ -72,14 +75,10 @@ class RepaymentScheduleService(
                 ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
 
         val transaction =
-            transactionRepository.findById(schedule.transactionId)
+            transactionRepository.findById(transactionId)
                 ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
 
-        if (transaction.repaymentType == RepaymentType.FLEXIBLE) {
-            throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
-        }
-
-        validateUserAccess(transaction.userId, userId)
+        validateRepaymentRequest(schedule, transaction, transactionId, userId)
 
         val updatedSchedule =
             schedule.copy(
@@ -94,11 +93,16 @@ class RepaymentScheduleService(
         return generateRepaymentItems(listOf(savedSchedule)).first()
     }
 
-    private fun validateUserAccess(
-        transactionUserId: Long,
-        requestUserId: Long,
+    private fun validateRepaymentRequest(
+        schedule: RepaymentSchedule,
+        transaction: Transaction,
+        transactionId: Long,
+        userId: Long,
     ) {
-        if (transactionUserId != requestUserId) {
+        if (schedule.transactionId != transactionId ||
+            transaction.repaymentType == RepaymentType.FLEXIBLE ||
+            transaction.userId != userId
+        ) {
             throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
         }
     }

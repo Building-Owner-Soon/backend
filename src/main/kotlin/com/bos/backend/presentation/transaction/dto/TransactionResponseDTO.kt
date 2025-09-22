@@ -25,7 +25,6 @@ data class TransactionResponseDTO(
     val monthlyAmount: BigDecimal?,
     val paymentDay: Int?,
     val hasTargetDate: Boolean?,
-    val isCompleted: Boolean,
     val createdAt: Instant,
     val updatedAt: Instant,
 )
