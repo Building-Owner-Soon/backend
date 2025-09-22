@@ -102,41 +102,22 @@ jobs:
           # Upload new JAR file
           scp -i private_key.pem -o StrictHostKeyChecking=no \
             artifacts/bos-backend-$ARTIFACT_VERSION.jar \
-            $USER@$HOST:/home/$USER/bos-backend-$ARTIFACT_VERSION.jar
+            $USER@$HOST:/home/$USER/bos-backend.jar
 
-          # Deploy with zero-downtime strategy
+          # Simple deployment strategy
           ssh -i private_key.pem -o StrictHostKeyChecking=no $USER@$HOST << EOF
             set -e
 
-            # Create backup of current version
-            if [ -f bos-backend-current.jar ]; then
-              cp bos-backend-current.jar bos-backend-backup.jar
-              echo "✅ Created backup of current version"
-            fi
-
-            # Create symlink to new version
-            ln -sf bos-backend-$ARTIFACT_VERSION.jar bos-backend-current.jar
-            echo "✅ Updated symlink to new version"
-
-            # Graceful shutdown of old process
-            OLD_PID=\$(pgrep -f 'java.*bos-backend' || echo "")
-            if [ ! -z "\$OLD_PID" ]; then
-              echo "⏹️  Gracefully stopping old process (PID: \$OLD_PID)"
-              kill -TERM \$OLD_PID
-              sleep 10
-
-              # Force kill if still running
-              if kill -0 \$OLD_PID 2>/dev/null; then
-                echo "🔪 Force killing old process"
-                kill -KILL \$OLD_PID
-              fi
-            fi
+            # Kill existing process
+            echo "⏹️  Stopping existing application..."
+            pkill -f 'java.*bos-backend' || echo "No existing process found"
+            sleep 5
 
             # Start new process
             echo "🚀 Starting new application..."
             nohup java -jar \
               -Xms512m -Xmx1024m \
-              /home/$USER/bos-backend-current.jar \
+              /home/$USER/bos-backend.jar \
               > logs/bos-backend-$ARTIFACT_VERSION.log 2>&1 &
 
             # TODO: Add profile-specific startup when multi-environment setup is needed
