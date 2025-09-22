@@ -5,7 +5,9 @@ import com.bos.backend.application.CustomException
 import com.bos.backend.application.auth.strategy.AuthStrategyResolver
 import com.bos.backend.application.service.EmailVerificationService
 import com.bos.backend.application.service.JwtService
+import com.bos.backend.domain.auth.entity.RefreshToken
 import com.bos.backend.domain.auth.enums.EmailVerificationType
+import com.bos.backend.domain.auth.repository.RefreshTokenRepository
 import com.bos.backend.domain.term.entity.UserTermAgreement
 import com.bos.backend.domain.term.repository.UserTermAgreementRepository
 import com.bos.backend.domain.user.enum.ProviderType
@@ -19,9 +21,11 @@ import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
 import com.bos.backend.presentation.auth.dto.PasswordResetRequestDTO
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
+import com.bos.backend.presentation.auth.dto.TokenRefreshRequestDTO
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 
 @Service
 @Transactional
@@ -33,6 +37,7 @@ class AuthService(
     private val userTermsAgreementRepository: UserTermAgreementRepository,
     private val userRepository: UserRepository,
     private val emailVerificationService: EmailVerificationService,
+    private val refreshTokenRepository: RefreshTokenRepository,
     @Value("\${application.jwt.access-token-expiration}") private val accessTokenExpiration: Long,
     @Value("\${application.jwt.refresh-token-expiration}") private val refreshTokenExpiration: Long,
 ) {
@@ -56,6 +61,9 @@ class AuthService(
         val accessToken = jwtService.generateToken(authResult.user.id.toString(), accessTokenExpiration)
         val refreshToken = jwtService.generateToken(authResult.user.id.toString(), refreshTokenExpiration)
 
+        // RefreshToken 저장
+        saveRefreshToken(authResult.user.id!!, refreshToken)
+
         return CommonSignResponseDTO(accessToken, refreshToken)
     }
 
@@ -69,6 +77,9 @@ class AuthService(
 
         val accessToken = jwtService.generateToken(authResult.user.id.toString(), accessTokenExpiration)
         val refreshToken = jwtService.generateToken(authResult.user.id.toString(), refreshTokenExpiration)
+
+        // RefreshToken 저장
+        saveRefreshToken(authResult.user.id!!, refreshToken)
 
         return CommonSignResponseDTO(accessToken, refreshToken)
     }
@@ -147,5 +158,53 @@ class AuthService(
             throw CustomException(AuthErrorCode.USER_NOT_FOUND)
         }
         userRepository.deleteById(userId)
+    }
+
+    @Suppress("ThrowsCount")
+    suspend fun refreshToken(request: TokenRefreshRequestDTO): CommonSignResponseDTO {
+        // Refresh Token 유효성 검증
+        if (!jwtService.validateTokenFormat(request.refreshToken)) {
+            throw CustomException(AuthErrorCode.INVALID_TOKEN)
+        }
+
+        val tokenHash = jwtService.hashToken(request.refreshToken)
+        val storedRefreshToken =
+            refreshTokenRepository.findByTokenHash(tokenHash)
+                ?: throw CustomException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND)
+
+        if (storedRefreshToken.isExpired()) {
+            throw CustomException(AuthErrorCode.REFRESH_TOKEN_EXPIRED)
+        }
+
+        if (storedRefreshToken.isRevoked()) {
+            throw CustomException(AuthErrorCode.REFRESH_TOKEN_REVOKED)
+        }
+
+        val userId = storedRefreshToken.userId
+
+        refreshTokenRepository.revokeByTokenHash(tokenHash)
+
+        val newAccessToken = jwtService.generateToken(userId.toString(), accessTokenExpiration)
+        val newRefreshToken = jwtService.generateToken(userId.toString(), refreshTokenExpiration)
+
+        saveRefreshToken(userId, newRefreshToken)
+
+        return CommonSignResponseDTO(newAccessToken, newRefreshToken)
+    }
+
+    private suspend fun saveRefreshToken(
+        userId: Long,
+        refreshToken: String,
+    ) {
+        val tokenHash = jwtService.hashToken(refreshToken)
+        val expiresAt = Instant.now().plusSeconds(refreshTokenExpiration)
+
+        refreshTokenRepository.save(
+            RefreshToken(
+                userId = userId,
+                tokenHash = tokenHash,
+                expiresAt = expiresAt,
+            ),
+        )
     }
 }

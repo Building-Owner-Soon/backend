@@ -8,6 +8,7 @@ import com.bos.backend.presentation.auth.dto.ErrorResponse
 import com.bos.backend.presentation.auth.dto.PasswordResetRequestDTO
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
+import com.bos.backend.presentation.auth.dto.TokenRefreshRequestDTO
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -77,4 +78,10 @@ class AuthController(
     suspend fun withdraw(
         @AuthenticationPrincipal userId: String,
     ) = authService.deleteById(userId.toLong())
+
+    @PostMapping("/auth/token/refresh")
+    @ResponseStatus(HttpStatus.OK)
+    suspend fun refreshToken(
+        @Valid @RequestBody request: TokenRefreshRequestDTO,
+    ): CommonSignResponseDTO = authService.refreshToken(request)
 }
