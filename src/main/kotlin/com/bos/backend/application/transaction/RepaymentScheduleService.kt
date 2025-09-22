@@ -4,6 +4,7 @@ import com.bos.backend.application.CommonErrorCode
 import com.bos.backend.application.CustomException
 import com.bos.backend.domain.transaction.entity.RepaymentSchedule
 import com.bos.backend.domain.transaction.enum.RepaymentStatus
+import com.bos.backend.domain.transaction.enum.RepaymentType
 import com.bos.backend.domain.transaction.repository.RepaymentScheduleRepository
 import com.bos.backend.domain.transaction.repository.TransactionRepository
 import com.bos.backend.presentation.transaction.dto.CreateRepaymentRequestDTO
@@ -23,6 +24,10 @@ class RepaymentScheduleService(
         val transaction =
             transactionRepository.findById(transactionId)
                 ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+
+        if (transaction.repaymentType == RepaymentType.FLEXIBLE) {
+            throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+        }
 
         if (transaction.userId != userId) {
             throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
@@ -47,15 +52,15 @@ class RepaymentScheduleService(
         )
     }
 
-    private fun generateRepaymentItems(repaymentSchedules: List<RepaymentSchedule>): List<RepaymentScheduleItemDTO> {
-        return repaymentSchedules.map { schedule ->
-            RepaymentScheduleItemDTO(
-                status = schedule.status,
-                displayDate = schedule.actualDate ?: schedule.scheduledDate,
-                displayAmount = schedule.actualAmount ?: schedule.scheduledAmount,
-            )
-        }.sortedBy { it.displayDate }
-    }
+    private fun generateRepaymentItems(repaymentSchedules: List<RepaymentSchedule>): List<RepaymentScheduleItemDTO> =
+        repaymentSchedules
+            .map { schedule ->
+                RepaymentScheduleItemDTO(
+                    status = schedule.status,
+                    displayDate = schedule.actualDate ?: schedule.scheduledDate,
+                    displayAmount = schedule.actualAmount ?: schedule.scheduledAmount,
+                )
+            }.sortedBy { it.displayDate }
 
     suspend fun addRepayment(
         userId: Long,
@@ -69,6 +74,10 @@ class RepaymentScheduleService(
         val transaction =
             transactionRepository.findById(schedule.transactionId)
                 ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+
+        if (transaction.repaymentType == RepaymentType.FLEXIBLE) {
+            throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+        }
 
         validateUserAccess(transaction.userId, userId)
 
