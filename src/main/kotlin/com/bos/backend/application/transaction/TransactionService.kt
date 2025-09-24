@@ -140,7 +140,7 @@ class TransactionService(
         val monthsList = mutableListOf<LocalDate>()
         while (currentDate.isBefore(targetDate) || currentDate.isEqual(targetDate)) {
             monthsList.add(currentDate)
-            currentDate = currentDate.plusMonths(1)
+            currentDate = calculateNextPaymentDate(currentDate, paymentDay)
         }
 
         if (monthsList.isNotEmpty()) {
@@ -192,7 +192,7 @@ class TransactionService(
             )
 
             remainingAmount -= paymentAmount
-            currentDate = currentDate.plusMonths(1)
+            currentDate = calculateNextPaymentDate(currentDate, paymentDay)
         }
 
         return schedules
@@ -201,12 +201,20 @@ class TransactionService(
     private fun calculateNextPaymentDate(
         baseDate: LocalDate,
         paymentDay: Int,
-    ): LocalDate =
-        if (baseDate.dayOfMonth > paymentDay) {
-            baseDate.plusMonths(1).withDayOfMonth(paymentDay)
-        } else {
-            baseDate.withDayOfMonth(paymentDay)
-        }
+    ): LocalDate {
+        val targetMonth =
+            if (baseDate.dayOfMonth > paymentDay) {
+                baseDate.plusMonths(1)
+            } else {
+                baseDate
+            }
+
+        val lastDayOfMonth = targetMonth.lengthOfMonth()
+
+        val adjustedPaymentDay = if (paymentDay > lastDayOfMonth) lastDayOfMonth else paymentDay
+
+        return targetMonth.withDayOfMonth(adjustedPaymentDay)
+    }
 
     private fun toTransactionResponseDTO(transaction: Transaction): TransactionResponseDTO =
         TransactionResponseDTO(
