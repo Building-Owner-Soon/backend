@@ -35,7 +35,7 @@ interface UserAuthCoroutineRepository : CoroutineCrudRepository<UserAuth, Long> 
     ): Int
 
     @Modifying
-    @Query("UPDATE user_auths SET password = :newPassword WHERE email = :email")
+    @Query("UPDATE user_auths SET password_hash = :newPassword WHERE email = :email")
     suspend fun resetPassword(
         @Param("email") email: String,
         @Param("newPassword") newPassword: String,
