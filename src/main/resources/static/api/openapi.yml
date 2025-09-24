@@ -245,6 +245,69 @@ paths:
         "429":
           description: |-
             - `TOO_MANY_REQUESTS`: 60초 이내에 요청했을 경우
+  /auth/password-reset:
+    post:
+      tags:
+        - auth
+      operationId: resetPassword
+      summary: "비밀번호 재설정"
+      description: |-
+        사용자의 비밀번호를 재설정합니다.
+
+        1. `/auth/email-verification` API로 이메일 인증 요청 (type: PASSWORD_RESET)
+        2. `/auth/email-verification/verify-code` API로 인증 코드 검증 (type: PASSWORD_RESET)
+        3. 본 API를 사용하여 새로운 비밀번호로 변경
+
+        ## 비밀번호 요구사항
+        - 8~20자 이내
+        - 영문 대소문자, 숫자, 특수문자 중 3가지 이상 조합
+
+        ## Request Body
+        - email: 비밀번호를 재설정할 이메일 주소
+        - newPassword: 새로운 비밀번호
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - newPassword
+              properties:
+                email:
+                  $ref: "#/components/schemas/Email"
+                newPassword:
+                  type: string
+                  description: 새로운 비밀번호
+                  example: "NewPassword123!"
+                  minLength: 8
+                  maxLength: 20
+      responses:
+        "204":
+          description: |-
+            비밀번호 재설정이 성공적으로 완료되었습니다. 응답 바디 없이 204만 반환합니다.
+        "400":
+          description: |-
+            비밀번호 재설정 요청 실패
+
+            **에러 케이스:**
+            - `USER_NOT_FOUND`: 해당 이메일로 가입된 사용자를 찾을 수 없습니다
+            - `INVALID_PASSWORD`: 비밀번호가 요구사항을 만족하지 않습니다
+            - `INVALID_REQUEST`: 요청 형식이 올바르지 않습니다
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorCode:
+                    type: string
+                    example: "USER_NOT_FOUND"
+                  message:
+                    type: string
+                    example: "해당 이메일로 가입된 사용자를 찾을 수 없습니다."
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
   /auth/withdrawal:
     delete:
       tags:
