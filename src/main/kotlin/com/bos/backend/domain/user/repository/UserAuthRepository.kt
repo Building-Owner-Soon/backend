@@ -25,4 +25,14 @@ interface UserAuthRepository {
         email: String,
         newPassword: String,
     )
+
+    suspend fun verifyPassword(
+        email: String,
+        password: String,
+    ): Boolean
+
+    suspend fun updatePassword(
+        userId: Long,
+        newPassword: String,
+    )
 }

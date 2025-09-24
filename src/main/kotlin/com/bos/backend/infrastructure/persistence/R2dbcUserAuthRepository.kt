@@ -40,6 +40,19 @@ interface UserAuthCoroutineRepository : CoroutineCrudRepository<UserAuth, Long> 
         @Param("email") email: String,
         @Param("newPassword") newPassword: String,
     ): Int
+
+    @Query("SELECT COUNT(*) > 0 FROM user_auths WHERE email = :email AND password_hash = :password")
+    suspend fun verifyPassword(
+        @Param("email") email: String,
+        @Param("password") password: String,
+    ): Boolean
+
+    @Modifying
+    @Query("UPDATE user_auths SET password_hash = :newPassword WHERE user_id = :userId")
+    suspend fun updatePassword(
+        @Param("userId") userId: Long,
+        @Param("newPassword") newPassword: String,
+    ): Int
 }
 
 @Repository
@@ -71,5 +84,17 @@ class R2dbcUserAuthRepositoryImpl(
         newPassword: String,
     ) {
         coroutineRepository.resetPassword(email, newPassword)
+    }
+
+    override suspend fun verifyPassword(
+        email: String,
+        password: String,
+    ): Boolean = coroutineRepository.verifyPassword(email, password)
+
+    override suspend fun updatePassword(
+        userId: Long,
+        newPassword: String,
+    ) {
+        coroutineRepository.updatePassword(userId, newPassword)
     }
 }

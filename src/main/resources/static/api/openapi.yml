@@ -456,6 +456,87 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/BaseProblemDetails"
+  /users/me/password:
+    post:
+      tags:
+        - user
+      operationId: changePassword
+      summary: "비밀번호 변경"
+      description: |-
+        로그인한 사용자의 비밀번호를 변경합니다.
+
+        ## 사용 방법
+        - 현재 비밀번호와 새로운 비밀번호를 입력하여 변경 요청
+        - 현재 비밀번호가 일치해야 변경 가능
+        - 새 비밀번호는 현재 비밀번호와 달라야 함
+
+        ## 비밀번호 요구사항
+        - 8~20자 이내
+        - 영문 대소문자, 숫자, 특수문자 중 3가지 이상 조합
+        - 연속된 문자나 숫자 3자 이상 금지
+
+        ## Request Body
+        - currentPassword: 현재 비밀번호
+        - newPassword: 새로운 비밀번호
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  description: 현재 비밀번호
+                  example: "CurrentPassword123!"
+                newPassword:
+                  type: string
+                  description: 새로운 비밀번호
+                  example: "NewPassword123!"
+                  minLength: 8
+                  maxLength: 20
+      responses:
+        "204":
+          description: |-
+            비밀번호 변경이 성공적으로 완료되었습니다. 응답 바디 없이 204만 반환합니다.
+        "400":
+          description: |-
+            비밀번호 변경 요청 실패
+
+            **에러 케이스:**
+            - `INVALID_PASSWORD`: 현재 비밀번호가 올바르지 않습니다
+            - `PASSWORD_POLICY_VIOLATION`: 새 비밀번호가 요구사항을 만족하지 않습니다
+            - `SAME_PASSWORD`: 새 비밀번호가 현재 비밀번호와 동일합니다
+            - `INVALID_REQUEST`: 요청 형식이 올바르지 않습니다
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorCode:
+                    type: string
+                    example: "INVALID_PASSWORD"
+                  message:
+                    type: string
+                    example: "현재 비밀번호가 올바르지 않습니다."
+        "401":
+          description: |-
+            인증 실패
+
+            **에러 케이스:**
+            - `INVALID_TOKEN`: 유효하지 않은 토큰
+            - `USER_NOT_FOUND`: 사용자를 찾을 수 없음
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/BaseProblemDetails"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
   /profile/assets:
     get:
       tags:
