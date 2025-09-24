@@ -47,4 +47,12 @@ enum class AuthErrorCode(
         "리프레시 토큰이 폐기되었습니다.",
         HttpStatus.UNAUTHORIZED,
     ),
+    INVALID_PASSWORD(
+        "현재 비밀번호가 올바르지 않습니다.",
+        HttpStatus.BAD_REQUEST,
+    ),
+    SAME_PASSWORD(
+        "새 비밀번호는 현재 비밀번호와 달라야 합니다.",
+        HttpStatus.BAD_REQUEST,
+    ),
 }

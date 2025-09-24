@@ -18,6 +18,7 @@ import com.bos.backend.presentation.auth.dto.CheckEmailResponse
 import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationCheckDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationRequestDTO
+import com.bos.backend.presentation.auth.dto.PasswordChangeRequestDTO
 import com.bos.backend.presentation.auth.dto.PasswordResetRequestDTO
 import com.bos.backend.presentation.auth.dto.SignInRequestDTO
 import com.bos.backend.presentation.auth.dto.SignUpRequestDTO
@@ -29,7 +30,7 @@ import java.time.Instant
 
 @Service
 @Transactional
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 class AuthService(
     private val authStrategyResolver: AuthStrategyResolver,
     private val jwtService: JwtService,
@@ -149,6 +150,30 @@ class AuthService(
         }
 
         userAuthRepository.resetPassword(request.email, request.newPassword)
+    }
+
+    @Suppress("ThrowsCount")
+    suspend fun changePassword(
+        userId: Long,
+        request: PasswordChangeRequestDTO,
+    ) {
+        val userAuth =
+            userAuthRepository.findByUserId(userId)
+                ?: throw CustomException(AuthErrorCode.USER_NOT_FOUND)
+
+        if (!userAuthRepository.verifyPassword(userAuth.email, request.currentPassword)) {
+            throw CustomException(AuthErrorCode.INVALID_PASSWORD)
+        }
+
+        if (!PasswordValidator.isValidPassword(request.newPassword)) {
+            throw CustomException(AuthErrorCode.PASSWORD_POLICY_VIOLATION)
+        }
+
+        if (request.currentPassword == request.newPassword) {
+            throw CustomException(AuthErrorCode.SAME_PASSWORD)
+        }
+
+        userAuthRepository.updatePassword(userId, request.newPassword)
     }
 
     suspend fun deleteById(userId: Long) {
