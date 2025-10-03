@@ -12,6 +12,7 @@ tags:
   - name: profile
   - name: notification
   - name: transaction
+  - name: relationship
 paths:
   /auth/sign-in:
     post:
@@ -894,6 +895,57 @@ paths:
           description: 인증 실패
         "404":
           description: 거래내역을 찾을 수 없음
+  /transactions/summary:
+    get:
+      tags:
+        - transaction
+      operationId: getTransactionSummary
+      summary: "거래 요약 조회"
+      description: |-
+        사용자의 갚을돈과 받을돈에 대한 요약 정보를 조회합니다.
+
+        ## 응답 정보
+        - 갚을돈: 총 금액, 현재까지 상환 금액, 잔여 금액
+        - 받을돈: 총 금액, 현재까지 받은 금액, 잔여 금액
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 거래 요약 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebtSummaryResponse"
+        "401":
+          description: 인증 실패
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
+  /relationships:
+    get:
+      tags:
+        - relationship
+      operationId: getRelationships
+      summary: "채무관계 조회"
+      description: |-
+        현재 채무관계에 있는 사람들의 목록을 조회합니다.
+
+        ## 응답 정보
+        - 상대방 이름, 캐릭터, 관계
+        - 해당 사람과의 거래 요약 (갚을돈/받을돈 총액)
+        - 오늘 갚을돈이나 상환일 임박 알림 여부
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 채무관계 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationshipsResponse"
+        "401":
+          description: 인증 실패
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
 components:
   securitySchemes:
     BearerAuth:
@@ -1880,6 +1932,121 @@ components:
                 type: string
                 description: 필드별 에러 메시지
                 example: "리프레시 토큰은 필수입니다."
+    DebtSummaryResponse:
+      type: object
+      required:
+        - debtSummary
+      properties:
+        debtSummary:
+          $ref: "#/components/schemas/DebtSummary"
+    DebtSummary:
+      type: object
+      required:
+        - lendSummary
+        - borrowSummary
+      properties:
+        lendSummary:
+          $ref: "#/components/schemas/TransactionSummary"
+          description: 갚을돈 요약 (내가 빌려준 돈)
+        borrowSummary:
+          $ref: "#/components/schemas/TransactionSummary"
+          description: 받을돈 요약 (내가 빌린 돈)
+    TransactionSummary:
+      type: object
+      required:
+        - totalAmount
+        - completedAmount
+        - remainingAmount
+      properties:
+        totalAmount:
+          type: number
+          format: decimal
+          description: 총 금액
+          example: 1000000
+        completedAmount:
+          type: number
+          format: decimal
+          description: 현재까지 상환/받은 금액
+          example: 300000
+        remainingAmount:
+          type: number
+          format: decimal
+          description: 잔여 금액
+          example: 700000
+    RelationshipsResponse:
+      type: object
+      required:
+        - relationships
+      properties:
+        relationships:
+          type: array
+          items:
+            $ref: "#/components/schemas/RelationshipSummary"
+          description: 채무관계에 있는 사람들 목록
+    RelationshipSummary:
+      type: object
+      required:
+        - counterpartName
+        - counterpartCharacter
+        - relationship
+        - lendAmount
+        - borrowAmount
+      properties:
+        counterpartName:
+          type: string
+          description: 상대방 이름
+          example: "홍길동"
+        counterpartCharacter:
+          $ref: "#/components/schemas/Character"
+        relationship:
+          $ref: "#/components/schemas/RelationshipType"
+        customRelationship:
+          type: string
+          nullable: true
+          description: 기타 관계
+        lendAmount:
+          type: number
+          format: decimal
+          description: 이 사람에게 빌려준 돈 총액
+          example: 500000
+        borrowAmount:
+          type: number
+          format: decimal
+          description: 이 사람에게서 빌린 돈 총액
+          example: 200000
+        upcomingTransactionInfo:
+          $ref: "#/components/schemas/UpcomingTransactionInfo"
+          nullable: true
+          description: |-
+            사용자가 확인해야할 임박한 거래 정보
+            없는 경우에 null
+    UpcomingTransactionInfo:
+      type: object
+      required:
+        - paymentType
+        - dueDate
+        - amount
+      properties:
+        paymentType:
+          type: string
+          enum:
+            - REPAYMENT
+            - RECEIVABLE
+          description: |-
+            결제 타입
+            - REPAYMENT: 갚을돈
+            - RECEIVABLE: 받을돈
+          example: REPAYMENT
+        dueDate:
+          type: string
+          format: date
+          description: 상환/수금 예정일
+          example: "2025-01-25"
+        amount:
+          type: number
+          format: decimal
+          description: 상환/수금 예정 금액
+          example: 100000
 
   requestBodies:
     SignUpRequestSpec:

@@ -4,6 +4,7 @@ import com.bos.backend.application.transaction.RepaymentScheduleService
 import com.bos.backend.application.transaction.TransactionService
 import com.bos.backend.presentation.transaction.dto.CreateRepaymentRequestDTO
 import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
+import com.bos.backend.presentation.transaction.dto.DebtSummaryResponseDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentManagementResponseDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentScheduleItemDTO
 import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
@@ -77,4 +78,10 @@ class TransactionController(
             scheduleId,
             createRepaymentRequestDTO,
         )
+
+    @GetMapping("/summary")
+    @ResponseStatus(HttpStatus.OK)
+    suspend fun getTransactionSummary(
+        @AuthenticationPrincipal userId: String,
+    ): DebtSummaryResponseDTO = transactionService.getTransactionSummary(userId.toLong())
 }
