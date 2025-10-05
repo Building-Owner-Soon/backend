@@ -978,12 +978,7 @@ components:
         email:
           $ref: "#/components/schemas/Email"
         password:
-          type: string
-          example: abcdefg12345
-          description: |-
-            이메일 계정인 경우에만 사용합니다. 소셜로그인의 경우 `null`
-
-            클라이언트 인증이 된 상태로 넘어와야 합니다 (AES-256)
+          $ref: "#/components/schemas/Password"
     Gender:
       type: string
       enum:
@@ -1173,9 +1168,7 @@ components:
         email:
           $ref: "#/components/schemas/Email"
         password:
-          type: string
-          description: |-
-            이메일 계정인 경우에만 사용합니다. 소셜로그인의 경우 `null`
+          $ref: "#/components/schemas/Password"
         providerAccessToken:
           description: |-
             소셜로그인 제공자로부터 받은 access token 입니다. (KAKAO 등)
@@ -1213,6 +1206,19 @@ components:
       format: email
       description: email 주소
       example: abc@abc.com
+    Password:
+      type: string
+      nullable: true
+      description: |-
+        비밀번호
+
+        **Provider가 BOS인 경우 필수이며, 다음 조건을 만족해야 합니다:**
+        - 8자 이상
+        - 영문, 숫자, 특수문자(@$!%*#?&) 모두 포함
+
+        소셜 로그인(KAKAO 등)의 경우 `null`
+      pattern: '^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
+      example: "Password123!"
     PhoneNumber:
       type: string
       pattern: '^010-\d{4}-\d{4}$'
