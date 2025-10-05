@@ -12,6 +12,7 @@ tags:
   - name: profile
   - name: notification
   - name: transaction
+  - name: relationship
 paths:
   /auth/sign-in:
     post:
@@ -922,7 +923,7 @@ paths:
   /relationships:
     get:
       tags:
-        - transaction
+        - relationship
       operationId: getRelationships
       summary: "채무관계 조회"
       description: |-
