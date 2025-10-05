@@ -14,6 +14,8 @@ interface R2dbcRepaymentScheduleRepository :
     CoroutineCrudRepository<RepaymentSchedule, Long> {
     override suspend fun findByTransactionId(transactionId: Long): List<RepaymentSchedule>
 
+    override suspend fun findByTransactionIdIn(transactionIds: List<Long>): List<RepaymentSchedule>
+
     @Query(
         """
         UPDATE repayment_schedules
