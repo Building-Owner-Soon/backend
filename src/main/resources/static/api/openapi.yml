@@ -588,6 +588,29 @@ paths:
                 type: string
         "500":
           $ref: "#/components/responses/InternalServerErrorResponseSpec"
+  /profile/assets/random:
+    get:
+      tags:
+        - profile
+      operationId: getRandomAssets
+      summary: "랜덤 프로필 에셋 조회"
+      description: |-
+        각 프로필 에셋 타입별로 랜덤하게 선택된 하나의 에셋을 반환합니다.
+
+        캐릭터 초기 생성 시 기본값을 제공하거나, 랜덤 캐릭터 생성 기능에 사용됩니다.
+
+        - 각 타입(home, face, hand, bang, backHair, eyes, mouth)별로 하나씩만 반환
+        - skinColor는 기본 살색(#FEEFE7)으로 고정 반환
+      responses:
+        "200":
+          description: |-
+            랜덤 프로필 에셋이 성공적으로 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RandomProfileAssetResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
   /notifications:
     get:
       tags:
@@ -1483,6 +1506,36 @@ components:
           format: uri
           description: 에셋 이미지의 URI
           example: "https://example.com/face_type_1.svg"
+    RandomProfileAssetResponse:
+      type: object
+      required:
+        - home
+        - face
+        - hand
+        - bang
+        - backHair
+        - eyes
+        - mouth
+        - skinColor
+      properties:
+        home:
+          $ref: "#/components/schemas/Asset"
+        face:
+          $ref: "#/components/schemas/Asset"
+        hand:
+          $ref: "#/components/schemas/Asset"
+        bang:
+          $ref: "#/components/schemas/Asset"
+        backHair:
+          $ref: "#/components/schemas/Asset"
+        eyes:
+          $ref: "#/components/schemas/Asset"
+        mouth:
+          $ref: "#/components/schemas/Asset"
+        skinColor:
+          type: string
+          description: 기본 스킨 컬러 (고정값)
+          example: "#FEEFE7"
     NotificationCategory:
       type: string
       enum:
