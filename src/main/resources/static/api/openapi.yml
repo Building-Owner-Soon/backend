@@ -1001,6 +1001,45 @@ components:
           $ref: "#/components/schemas/ProfileAsset"
         home:
           $ref: "#/components/schemas/ProfileAsset"
+    CounterpartCharacter:
+      type: object
+      required:
+        - face
+        - hand
+        - skinColor
+        - bang
+        - backHair
+        - eyes
+        - mouth
+      properties:
+        face:
+          type: string
+          description: 얼굴 ID
+          example: "FACE_TYPE_1"
+        hand:
+          type: string
+          description: 손 ID
+          example: "HAND_TYPE_1"
+        skinColor:
+          type: string
+          description: 피부색
+          example: "#FFDBAC"
+        bang:
+          type: string
+          description: 앞머리 ID
+          example: "BANG_TYPE_1"
+        backHair:
+          type: string
+          description: 뒷머리 ID
+          example: "BACK_HAIR_TYPE_1"
+        eyes:
+          type: string
+          description: 눈 ID
+          example: "EYES_TYPE_1"
+        mouth:
+          type: string
+          description: 입 ID
+          example: "MOUTH_TYPE_1"
     UpdateProfileCharacter:
       type: object
       properties:
@@ -1596,7 +1635,7 @@ components:
           example: "홍길동"
           maxLength: 12
         counterpartCharacter:
-          $ref: "#/components/schemas/Character"
+          $ref: "#/components/schemas/CounterpartCharacter"
         relationship:
           $ref: "#/components/schemas/RelationshipType"
         customRelationship:
@@ -1649,11 +1688,6 @@ components:
           example: 15
           minimum: 1
           maximum: 31
-        hasTargetDate:
-          type: boolean
-          nullable: true
-          description: 완료일 설정 여부
-          example: true
     UpdateTransactionRequest:
       type: object
       required:
@@ -1667,7 +1701,7 @@ components:
           example: "홍길동"
           maxLength: 12
         counterpartCharacter:
-          $ref: "#/components/schemas/Character"
+          $ref: "#/components/schemas/CounterpartCharacter"
         relationship:
           $ref: "#/components/schemas/RelationshipType"
         customRelationship:
@@ -1708,7 +1742,7 @@ components:
           description: 상대방 이름
           example: "홍길동"
         counterpartCharacter:
-          $ref: "#/components/schemas/Character"
+          $ref: "#/components/schemas/CounterpartCharacter"
         relationship:
           $ref: "#/components/schemas/RelationshipType"
         customRelationship:
@@ -1760,11 +1794,6 @@ components:
           nullable: true
           description: 매달 납부일
           example: 15
-        hasTargetDate:
-          type: boolean
-          nullable: true
-          description: 완료일 설정 여부
-          example: true
         createdAt:
           type: string
           format: date-time

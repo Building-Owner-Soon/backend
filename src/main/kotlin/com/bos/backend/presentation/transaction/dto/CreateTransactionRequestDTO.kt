@@ -41,7 +41,6 @@ data class CreateTransactionRequestDTO(
     @field:Min(value = 1, message = "매달 납부일은 1 이상이어야 합니다")
     @field:Max(value = 31, message = "매달 납부일은 31 이하여야 합니다")
     val paymentDay: Int?,
-    val hasTargetDate: Boolean?,
 )
 
 data class CounterpartCharacterDTO(

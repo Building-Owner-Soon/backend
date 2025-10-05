@@ -24,7 +24,6 @@ data class TransactionResponseDTO(
     val targetDate: LocalDate?,
     val monthlyAmount: BigDecimal?,
     val paymentDay: Int?,
-    val hasTargetDate: Boolean?,
     val createdAt: Instant,
     val updatedAt: Instant,
 )

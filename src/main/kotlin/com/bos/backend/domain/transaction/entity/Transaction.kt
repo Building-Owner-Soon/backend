@@ -40,8 +40,6 @@ data class Transaction(
     val monthlyAmount: BigDecimal?,
     @Column("payment_day")
     val paymentDay: Int?,
-    @Column("has_target_date")
-    val hasTargetDate: Boolean?,
     @Column("created_at")
     val createdAt: Instant = Instant.now(),
     @Column("updated_at")
