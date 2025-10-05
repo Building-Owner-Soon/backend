@@ -5,13 +5,22 @@ import com.bos.backend.application.CustomException
 import com.bos.backend.application.user.UserService
 import com.bos.backend.domain.transaction.entity.RepaymentSchedule
 import com.bos.backend.domain.transaction.entity.Transaction
+import com.bos.backend.domain.transaction.enum.RepaymentStatus
 import com.bos.backend.domain.transaction.enum.RepaymentType
+import com.bos.backend.domain.transaction.enum.TransactionType
 import com.bos.backend.domain.transaction.repository.RepaymentScheduleRepository
 import com.bos.backend.domain.transaction.repository.TransactionRepository
 import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
+import com.bos.backend.presentation.transaction.dto.DebtSummaryDTO
+import com.bos.backend.presentation.transaction.dto.DebtSummaryResponseDTO
+import com.bos.backend.presentation.transaction.dto.PaymentType
+import com.bos.backend.presentation.transaction.dto.RelationshipSummaryDTO
+import com.bos.backend.presentation.transaction.dto.RelationshipsResponseDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentScheduleDetailDTO
 import com.bos.backend.presentation.transaction.dto.TransactionDetailResponseDTO
 import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
+import com.bos.backend.presentation.transaction.dto.TransactionSummaryDTO
+import com.bos.backend.presentation.transaction.dto.UpcomingTransactionInfoDTO
 import com.bos.backend.presentation.transaction.dto.UpdateTransactionRequestDTO
 import org.springframework.stereotype.Service
 import org.springframework.transaction.reactive.TransactionalOperator
@@ -322,6 +331,130 @@ class TransactionService(
             RepaymentType.FIXED_MONTHLY -> transaction.monthlyAmount
             RepaymentType.FLEXIBLE -> null
         }
+
+    suspend fun getTransactionSummary(userId: Long): DebtSummaryResponseDTO {
+        val transactions = transactionRepository.findByUserId(userId)
+
+        val lendTransactions = transactions.filter { it.transactionType == TransactionType.LEND }
+        val borrowTransactions = transactions.filter { it.transactionType == TransactionType.BORROW }
+
+        val lendSummary =
+            TransactionSummaryDTO(
+                totalAmount = lendTransactions.sumOf { it.totalAmount }.toLong(),
+                completedAmount = lendTransactions.sumOf { it.completedAmount }.toLong(),
+                remainingAmount = lendTransactions.sumOf { it.remainingAmount() }.toLong(),
+            )
+
+        val borrowSummary =
+            TransactionSummaryDTO(
+                totalAmount = borrowTransactions.sumOf { it.totalAmount }.toLong(),
+                completedAmount = borrowTransactions.sumOf { it.completedAmount }.toLong(),
+                remainingAmount = borrowTransactions.sumOf { it.remainingAmount() }.toLong(),
+            )
+
+        return DebtSummaryResponseDTO(
+            debtSummary =
+                DebtSummaryDTO(
+                    lendSummary = lendSummary,
+                    borrowSummary = borrowSummary,
+                ),
+        )
+    }
+
+    suspend fun getRelationships(userId: Long): RelationshipsResponseDTO {
+        val transactions = transactionRepository.findByUserId(userId)
+
+        if (transactions.isEmpty()) {
+            return RelationshipsResponseDTO(relationships = emptyList())
+        }
+
+        val transactionIds = transactions.mapNotNull { it.id }
+        val allSchedules = repaymentScheduleRepository.findByTransactionIdIn(transactionIds)
+
+        data class CounterpartKey(
+            val name: String,
+            val relationship: String,
+            val customRelationship: String?,
+        )
+
+        val groupedTransactions =
+            transactions.groupBy {
+                CounterpartKey(
+                    name = it.counterpartName,
+                    relationship = it.relationship.name,
+                    customRelationship = it.customRelationship,
+                )
+            }
+
+        val today = LocalDate.now()
+        val twoDaysFromNow = today.plusDays(2)
+
+        val relationships =
+            groupedTransactions.map { (key, txList) ->
+                val lendAmount =
+                    txList
+                        .filter { it.transactionType == TransactionType.LEND }
+                        .sumOf { it.remainingAmount() }
+                        .toLong()
+                val borrowAmount =
+                    txList
+                        .filter { it.transactionType == TransactionType.BORROW }
+                        .sumOf { it.remainingAmount() }
+                        .toLong()
+
+                val upcomingInfo = findUpcomingTransactionInfo(txList, allSchedules, today, twoDaysFromNow)
+
+                RelationshipSummaryDTO(
+                    counterpartName = key.name,
+                    counterpartCharacter = txList.first().counterpartCharacter,
+                    relationship = txList.first().relationship,
+                    customRelationship = key.customRelationship,
+                    lendAmount = lendAmount,
+                    borrowAmount = borrowAmount,
+                    upcomingTransactionInfo = upcomingInfo,
+                )
+            }
+
+        return RelationshipsResponseDTO(relationships = relationships)
+    }
+
+    private fun findUpcomingTransactionInfo(
+        transactions: List<Transaction>,
+        allSchedules: List<RepaymentSchedule>,
+        today: LocalDate,
+        twoDaysFromNow: LocalDate,
+    ): UpcomingTransactionInfoDTO? {
+        val transactionIds = transactions.mapNotNull { it.id }
+        val schedules =
+            allSchedules
+                .filter { it.transactionId in transactionIds }
+                .filter { it.status != RepaymentStatus.COMPLETED }
+
+        val upcomingSchedules =
+            schedules
+                .filter {
+                    it.status == RepaymentStatus.OVERDUE ||
+                        it.status == RepaymentStatus.IN_PROGRESS ||
+                        (it.scheduledDate in today..twoDaysFromNow)
+                }
+                .sortedBy { it.scheduledDate }
+
+        return upcomingSchedules.firstOrNull()?.let { earliestSchedule ->
+            transactions.find { it.id == earliestSchedule.transactionId }?.let { transaction ->
+                val paymentType =
+                    when (transaction.transactionType) {
+                        TransactionType.LEND -> PaymentType.REPAYMENT
+                        TransactionType.BORROW -> PaymentType.RECEIVABLE
+                    }
+
+                UpcomingTransactionInfoDTO(
+                    paymentType = paymentType,
+                    dueDate = earliestSchedule.scheduledDate,
+                    amount = earliestSchedule.scheduledAmount.toLong(),
+                )
+            }
+        }
+    }
 
     private suspend fun toTransactionResponseDTO(
         transaction: Transaction,

@@ -4,6 +4,7 @@ import com.bos.backend.application.service.ProfileService
 import com.bos.backend.domain.profile.enums.ProfileAssetType
 import com.bos.backend.presentation.profile.dto.AssetDTO
 import com.bos.backend.presentation.profile.dto.ProfileAssetResponseDTO
+import com.bos.backend.presentation.profile.dto.RandomProfileAssetResponseDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -48,5 +49,23 @@ class ProfileController(
             .header("ETag", etag)
             .header("Cache-Control", "max-age=86400, must-revalidate")
             .body(response)
+    }
+
+    @GetMapping("/assets/random")
+    suspend fun getRandomAssets(): ResponseEntity<RandomProfileAssetResponseDTO> {
+        val randomAssets = profileService.getRandomAsset()
+        val response =
+            RandomProfileAssetResponseDTO(
+                home = randomAssets[ProfileAssetType.HOME]!!.let { AssetDTO(it.id, it.uri) },
+                face = randomAssets[ProfileAssetType.FACE]!!.let { AssetDTO(it.id, it.uri) },
+                hand = randomAssets[ProfileAssetType.HAND]!!.let { AssetDTO(it.id, it.uri) },
+                bang = randomAssets[ProfileAssetType.BANG]!!.let { AssetDTO(it.id, it.uri) },
+                backHair = randomAssets[ProfileAssetType.BACK_HAIR]!!.let { AssetDTO(it.id, it.uri) },
+                eyes = randomAssets[ProfileAssetType.EYES]!!.let { AssetDTO(it.id, it.uri) },
+                mouth = randomAssets[ProfileAssetType.MOUTH]!!.let { AssetDTO(it.id, it.uri) },
+                skinColor = "#FEEFE7",
+            )
+
+        return ResponseEntity.ok(response)
     }
 }

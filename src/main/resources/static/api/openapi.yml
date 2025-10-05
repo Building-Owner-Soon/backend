@@ -12,6 +12,7 @@ tags:
   - name: profile
   - name: notification
   - name: transaction
+  - name: relationship
 paths:
   /auth/sign-in:
     post:
@@ -259,8 +260,12 @@ paths:
         3. 본 API를 사용하여 새로운 비밀번호로 변경
 
         ## 비밀번호 요구사항
-        - 8~20자 이내
-        - 영문 대소문자, 숫자, 특수문자 중 3가지 이상 조합
+        - 최소 8자 이상
+        - 영문 대문자 1개 이상 포함
+        - 영문 소문자 1개 이상 포함
+        - 숫자 1개 이상 포함
+        - 특수문자(@$!%*#?&) 1개 이상 포함
+        - 허용 문자: 영문자, 숫자, 특수문자(@$!%*#?&)만 사용 가능
 
         ## Request Body
         - email: 비밀번호를 재설정할 이메일 주소
@@ -278,11 +283,7 @@ paths:
                 email:
                   $ref: "#/components/schemas/Email"
                 newPassword:
-                  type: string
-                  description: 새로운 비밀번호
-                  example: "NewPassword123!"
-                  minLength: 8
-                  maxLength: 20
+                  $ref: "#/components/schemas/Password"
       responses:
         "204":
           description: |-
@@ -471,9 +472,12 @@ paths:
         - 새 비밀번호는 현재 비밀번호와 달라야 함
 
         ## 비밀번호 요구사항
-        - 8~20자 이내
-        - 영문 대소문자, 숫자, 특수문자 중 3가지 이상 조합
-        - 연속된 문자나 숫자 3자 이상 금지
+        - 최소 8자 이상
+        - 영문 대문자 1개 이상 포함
+        - 영문 소문자 1개 이상 포함
+        - 숫자 1개 이상 포함
+        - 특수문자(@$!%*#?&) 1개 이상 포함
+        - 허용 문자: 영문자, 숫자, 특수문자(@$!%*#?&)만 사용 가능
 
         ## Request Body
         - currentPassword: 현재 비밀번호
@@ -585,6 +589,29 @@ paths:
               description: 캐시 제어 헤더
               schema:
                 type: string
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
+  /profile/assets/random:
+    get:
+      tags:
+        - profile
+      operationId: getRandomAssets
+      summary: "랜덤 프로필 에셋 조회"
+      description: |-
+        각 프로필 에셋 타입별로 랜덤하게 선택된 하나의 에셋을 반환합니다.
+
+        캐릭터 초기 생성 시 기본값을 제공하거나, 랜덤 캐릭터 생성 기능에 사용됩니다.
+
+        - 각 타입(home, face, hand, bang, backHair, eyes, mouth)별로 하나씩만 반환
+        - skinColor는 기본 살색(#FEEFE7)으로 고정 반환
+      responses:
+        "200":
+          description: |-
+            랜덤 프로필 에셋이 성공적으로 반환됩니다.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RandomProfileAssetResponse"
         "500":
           $ref: "#/components/responses/InternalServerErrorResponseSpec"
   /notifications:
@@ -921,6 +948,57 @@ paths:
           description: 인증 실패
         "404":
           description: 거래내역을 찾을 수 없음
+  /transactions/summary:
+    get:
+      tags:
+        - transaction
+      operationId: getTransactionSummary
+      summary: "거래 요약 조회"
+      description: |-
+        사용자의 갚을돈과 받을돈에 대한 요약 정보를 조회합니다.
+
+        ## 응답 정보
+        - 갚을돈: 총 금액, 현재까지 상환 금액, 잔여 금액
+        - 받을돈: 총 금액, 현재까지 받은 금액, 잔여 금액
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 거래 요약 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebtSummaryResponse"
+        "401":
+          description: 인증 실패
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
+  /relationships:
+    get:
+      tags:
+        - relationship
+      operationId: getRelationships
+      summary: "채무관계 조회"
+      description: |-
+        현재 채무관계에 있는 사람들의 목록을 조회합니다.
+
+        ## 응답 정보
+        - 상대방 이름, 캐릭터, 관계
+        - 해당 사람과의 거래 요약 (갚을돈/받을돈 총액)
+        - 오늘 갚을돈이나 상환일 임박 알림 여부
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 채무관계 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationshipsResponse"
+        "401":
+          description: 인증 실패
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponseSpec"
 components:
   securitySchemes:
     BearerAuth:
@@ -953,12 +1031,7 @@ components:
         email:
           $ref: "#/components/schemas/Email"
         password:
-          type: string
-          example: abcdefg12345
-          description: |-
-            이메일 계정인 경우에만 사용합니다. 소셜로그인의 경우 `null`
-
-            클라이언트 인증이 된 상태로 넘어와야 합니다 (AES-256)
+          $ref: "#/components/schemas/Password"
     Gender:
       type: string
       enum:
@@ -1187,9 +1260,7 @@ components:
         email:
           $ref: "#/components/schemas/Email"
         password:
-          type: string
-          description: |-
-            이메일 계정인 경우에만 사용합니다. 소셜로그인의 경우 `null`
+          $ref: "#/components/schemas/Password"
         providerAccessToken:
           description: |-
             소셜로그인 제공자로부터 받은 access token 입니다. (KAKAO 등)
@@ -1227,6 +1298,25 @@ components:
       format: email
       description: email 주소
       example: abc@abc.com
+    Password:
+      type: string
+      nullable: true
+      description: |-
+        비밀번호
+
+        **회원가입, 로그인시 Provider가 BOS인 경우 필수**
+
+        **다음 조건을 만족해야 합니다**
+        - 최소 8자 이상
+        - 영문 대문자 1개 이상 포함
+        - 영문 소문자 1개 이상 포함
+        - 숫자 1개 이상 포함
+        - 특수문자(@$!%*#?&) 1개 이상 포함
+        - 허용 문자: 영문자, 숫자, 특수문자(@$!%*#?&)만 사용 가능
+
+        소셜 로그인(KAKAO 등)의 경우 `null`
+      pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
+      example: "Password123!"
     PhoneNumber:
       type: string
       pattern: '^010-\d{4}-\d{4}$'
@@ -1497,6 +1587,36 @@ components:
           format: uri
           description: 에셋 이미지의 URI
           example: "https://example.com/face_type_1.svg"
+    RandomProfileAssetResponse:
+      type: object
+      required:
+        - home
+        - face
+        - hand
+        - bang
+        - backHair
+        - eyes
+        - mouth
+        - skinColor
+      properties:
+        home:
+          $ref: "#/components/schemas/Asset"
+        face:
+          $ref: "#/components/schemas/Asset"
+        hand:
+          $ref: "#/components/schemas/Asset"
+        bang:
+          $ref: "#/components/schemas/Asset"
+        backHair:
+          $ref: "#/components/schemas/Asset"
+        eyes:
+          $ref: "#/components/schemas/Asset"
+        mouth:
+          $ref: "#/components/schemas/Asset"
+        skinColor:
+          type: string
+          description: 기본 스킨 컬러 (고정값)
+          example: "#FEEFE7"
     NotificationCategory:
       type: string
       enum:
@@ -2012,6 +2132,121 @@ components:
                 type: string
                 description: 필드별 에러 메시지
                 example: "리프레시 토큰은 필수입니다."
+    DebtSummaryResponse:
+      type: object
+      required:
+        - debtSummary
+      properties:
+        debtSummary:
+          $ref: "#/components/schemas/DebtSummary"
+    DebtSummary:
+      type: object
+      required:
+        - lendSummary
+        - borrowSummary
+      properties:
+        lendSummary:
+          $ref: "#/components/schemas/TransactionSummary"
+          description: 갚을돈 요약 (내가 빌려준 돈)
+        borrowSummary:
+          $ref: "#/components/schemas/TransactionSummary"
+          description: 받을돈 요약 (내가 빌린 돈)
+    TransactionSummary:
+      type: object
+      required:
+        - totalAmount
+        - completedAmount
+        - remainingAmount
+      properties:
+        totalAmount:
+          type: number
+          format: decimal
+          description: 총 금액
+          example: 1000000
+        completedAmount:
+          type: number
+          format: decimal
+          description: 현재까지 상환/받은 금액
+          example: 300000
+        remainingAmount:
+          type: number
+          format: decimal
+          description: 잔여 금액
+          example: 700000
+    RelationshipsResponse:
+      type: object
+      required:
+        - relationships
+      properties:
+        relationships:
+          type: array
+          items:
+            $ref: "#/components/schemas/RelationshipSummary"
+          description: 채무관계에 있는 사람들 목록
+    RelationshipSummary:
+      type: object
+      required:
+        - counterpartName
+        - counterpartCharacter
+        - relationship
+        - lendAmount
+        - borrowAmount
+      properties:
+        counterpartName:
+          type: string
+          description: 상대방 이름
+          example: "홍길동"
+        counterpartCharacter:
+          $ref: "#/components/schemas/CounterpartCharacter"
+        relationship:
+          $ref: "#/components/schemas/RelationshipType"
+        customRelationship:
+          type: string
+          nullable: true
+          description: 기타 관계
+        lendAmount:
+          type: number
+          format: decimal
+          description: 이 사람에게 빌려준 돈 총액
+          example: 500000
+        borrowAmount:
+          type: number
+          format: decimal
+          description: 이 사람에게서 빌린 돈 총액
+          example: 200000
+        upcomingTransactionInfo:
+          $ref: "#/components/schemas/UpcomingTransactionInfo"
+          nullable: true
+          description: |-
+            사용자가 확인해야할 임박한 거래 정보
+            없는 경우에 null
+    UpcomingTransactionInfo:
+      type: object
+      required:
+        - paymentType
+        - dueDate
+        - amount
+      properties:
+        paymentType:
+          type: string
+          enum:
+            - REPAYMENT
+            - RECEIVABLE
+          description: |-
+            결제 타입
+            - REPAYMENT: 갚을돈
+            - RECEIVABLE: 받을돈
+          example: REPAYMENT
+        dueDate:
+          type: string
+          format: date
+          description: 상환/수금 예정일
+          example: "2025-01-25"
+        amount:
+          type: number
+          format: decimal
+          description: 상환/수금 예정 금액
+          example: 100000
 
   requestBodies:
     SignUpRequestSpec:
