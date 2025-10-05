@@ -1,9 +1,10 @@
 package com.bos.backend.presentation.auth.dto.validation
 
+import com.bos.backend.infrastructure.util.PasswordPolicy
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
 
-class PasswordValidator : ConstraintValidator<ValidPassword, String> {
+class ValidPasswordConstraintValidator : ConstraintValidator<ValidPassword, String> {
     private lateinit var annotation: ValidPassword
 
     override fun initialize(constraintAnnotation: ValidPassword) {
@@ -16,8 +17,7 @@ class PasswordValidator : ConstraintValidator<ValidPassword, String> {
     ): Boolean {
         if (value.isNullOrBlank()) return true
 
-        val regex = Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@\$!%*#?&])[A-Za-z\\d@\$!%*#?&]{8,}$")
-        val isValid = regex.matches(value)
+        val isValid = PasswordPolicy.isValidPassword(value)
 
         if (!isValid) {
             context.disableDefaultConstraintViolation()
