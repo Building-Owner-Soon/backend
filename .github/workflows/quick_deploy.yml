@@ -8,11 +8,6 @@ on:
         required: false
         default: 'develop'
         type: string
-      force_migration:
-        description: 'Force run migration regardless of detection'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   auto-deploy:
@@ -21,8 +16,6 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 20  # Get recent commits for DB change detection
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -64,107 +57,158 @@ jobs:
             exit 1
           fi
 
-      - name: Auto-detect Database Changes
-        id: db_changes
+      - name: Download Artifact from S3
         run: |
-          echo "🔍 Checking for database changes in recent commits..."
+          mkdir -p artifacts
+          aws s3 cp s3://bos-build-artifacts/bos-backend-${{ steps.artifact.outputs.ARTIFACT_VERSION }}.jar \
+          artifacts/bos-backend-${{ steps.artifact.outputs.ARTIFACT_VERSION }}.jar
 
-          # Check last 10 commits for migration file changes
-          DB_CHANGED=false
-          COMMITS_TO_CHECK=10
-
-          for i in $(seq 0 $((COMMITS_TO_CHECK-1))); do
-            COMMIT_SHA=$(git rev-parse HEAD~$i)
-            echo "Checking commit: $COMMIT_SHA"
-
-            if git diff --name-only HEAD~$((i+1)) HEAD~$i 2>/dev/null | grep -q "src/main/resources/db/migration/"; then
-              DB_CHANGED=true
-              echo "🔄 Database migration files changed in commit: $COMMIT_SHA"
-              git diff --name-only HEAD~$((i+1)) HEAD~$i | grep "src/main/resources/db/migration/" || true
-              break
-            fi
-          done
-
-          # Override with manual force flag
-          if [[ "${{ inputs.force_migration }}" == "true" ]]; then
-            DB_CHANGED=true
-            echo "🔄 Migration forced by user input"
-          fi
-
-          echo "DB_CHANGED=$DB_CHANGED" >> $GITHUB_OUTPUT
-
-          if [[ "$DB_CHANGED" == "true" ]]; then
-            echo "✅ Database migration will be executed"
-          else
-            echo "✅ No database migration needed"
-          fi
+          echo "Downloaded artifact size:"
+          ls -lh artifacts/
 
       - name: Display Deployment Plan
         run: |
           echo "## 🚀 Deployment Plan"
           echo "- **Artifact Version**: ${{ steps.artifact.outputs.ARTIFACT_VERSION }}"
-          echo "- **Run Migration**: ${{ steps.db_changes.outputs.DB_CHANGED }}"
           echo "- **Branch Filter**: ${{ inputs.branch_filter || 'develop' }}"
-          echo "- **Force Migration**: ${{ inputs.force_migration }}"
           echo ""
           echo "Proceeding with automatic deployment in 5 seconds..."
           sleep 5
 
-      - name: Trigger Deploy Workflow
+      - name: Deploy to EC2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+          ARTIFACT_VERSION: ${{ steps.artifact.outputs.ARTIFACT_VERSION }}
         run: |
-          echo "🚀 Triggering deployment workflow..."
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
 
-          curl -L -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "${{ github.api_url }}/repos/${{ github.repository }}/dispatches" \
-            -d "{
-              \"event_type\": \"deploy-ready\",
-              \"client_payload\": {
-                \"artifact_version\": \"${{ steps.artifact.outputs.ARTIFACT_VERSION }}\",
-                \"branch\": \"${{ inputs.branch_filter || 'develop' }}\",
-                \"commit\": \"${{ github.sha }}\",
-                \"db_changed\": \"${{ steps.db_changes.outputs.DB_CHANGED }}\",
-                \"triggered_by\": \"quick-deploy\",
-                \"actor\": \"${{ github.actor }}\"
-              }
-            }"
+          echo "🚀 Starting deployment..."
 
-      - name: Discord Notification
+          # Upload new JAR file
+          scp -i private_key.pem -o StrictHostKeyChecking=no \
+            artifacts/bos-backend-$ARTIFACT_VERSION.jar \
+            $USER@$HOST:/home/$USER/bos-backend.jar
+
+          # Simple deployment strategy
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $USER@$HOST << EOF
+            set -e
+
+            # Kill existing process
+            echo "⏹️  Stopping existing application..."
+            pkill -f 'java.*bos-backend' || echo "No existing process found"
+            sleep 5
+
+            # Start new process
+            echo "🚀 Starting new application..."
+            nohup java -jar \
+              -Xms512m -Xmx1024m \
+              /home/$USER/bos-backend.jar \
+              > logs/bos-backend-$ARTIFACT_VERSION.log 2>&1 &
+
+            NEW_PID=\$!
+            echo "✅ Started new process (PID: \$NEW_PID)"
+
+            # Wait for application to start
+            echo "⏳ Waiting for application to start..."
+            sleep 30
+
+            # Health check
+            for i in {1..12}; do
+              if curl -f http://localhost:8000/actuator/health >/dev/null 2>&1; then
+                echo "✅ Application health check passed"
+                exit 0
+              fi
+              echo "⏳ Health check attempt \$i/12 failed, retrying in 10s..."
+              sleep 10
+            done
+
+            echo "❌ Health check failed after 2 minutes"
+            exit 1
+          EOF
+
+          echo "✅ Deployment completed successfully"
+
+      - name: External Health Check
+        id: external_health_check
+        env:
+          HEALTH_CHECK_URL: ${{ secrets.HEALTH_CHECK_URL || 'http://54.180.123.147:8000/actuator/health' }}
+        run: |
+          echo "🔍 Performing external health check..."
+          echo "Health check URL: $HEALTH_CHECK_URL"
+
+          # Wait a bit more for external access to be ready
+          echo "⏳ Waiting for external connectivity..."
+          sleep 15
+
+          success=false
+          for i in {1..6}; do
+            echo "🔍 External health check attempt $i/6..."
+            if curl -f -s --max-time 10 "$HEALTH_CHECK_URL" > /dev/null; then
+              echo "✅ External health check passed!"
+              success=true
+              break
+            else
+              echo "⏳ External health check failed, retrying in 30 seconds..."
+              sleep 30
+            fi
+          done
+
+          if [ "$success" = "true" ]; then
+            echo "health_status=success" >> $GITHUB_OUTPUT
+            echo "✅ Application is healthy and accessible externally"
+          else
+            echo "health_status=failed" >> $GITHUB_OUTPUT
+            echo "❌ External health check failed - application may not be accessible"
+            # Don't fail the deployment, just warn
+            echo "⚠️ Deployment completed but health check failed"
+          fi
+
+      - name: Discord Deployment Notification
+        if: always()
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          DB_STATUS_EMOJI="✅"
-          DB_STATUS_TEXT="No migration needed"
+          if [ "${{ job.status }}" == "success" ]; then
+            COLOR=3066993
+            TITLE="✅ One-Click Deployment Completed"
+            STATUS_TEXT="Successfully deployed latest build"
+          else
+            COLOR=15158332
+            TITLE="❌ One-Click Deployment Failed"
+            STATUS_TEXT="Deployment failed"
+          fi
 
-          if [[ "${{ steps.db_changes.outputs.DB_CHANGED }}" == "true" ]]; then
-            DB_STATUS_EMOJI="🔄"
-            DB_STATUS_TEXT="Migration will be executed"
+          MIGRATION_STATUS="🔄 Migrations run on startup"
+
+          HEALTH_STATUS="✅ Healthy"
+          if [ "${{ steps.external_health_check.outputs.health_status }}" == "failed" ]; then
+            HEALTH_STATUS="⚠️ Health check failed"
           fi
 
           curl -H "Content-Type: application/json" \
           -d "{
             \"embeds\": [{
-              \"title\": \"🚀 One-Click Deploy Triggered\",
-              \"color\": 3066993,
+              \"title\": \"$TITLE\",
+              \"color\": $COLOR,
               \"fields\": [
                 {\"name\": \"Version\", \"value\": \"${{ steps.artifact.outputs.ARTIFACT_VERSION }}\", \"inline\": true},
                 {\"name\": \"Branch\", \"value\": \"${{ inputs.branch_filter || 'develop' }}\", \"inline\": true},
-                {\"name\": \"Migration\", \"value\": \"${DB_STATUS_EMOJI} ${DB_STATUS_TEXT}\", \"inline\": true},
-                {\"name\": \"Triggered by\", \"value\": \"${{ github.actor }}\", \"inline\": true},
-                {\"name\": \"Status\", \"value\": \"⏳ Deployment in progress...\", \"inline\": false}
+                {\"name\": \"Migration\", \"value\": \"$MIGRATION_STATUS\", \"inline\": true},
+                {\"name\": \"Health Check\", \"value\": \"$HEALTH_STATUS\", \"inline\": true},
+                {\"name\": \"Status\", \"value\": \"$STATUS_TEXT\", \"inline\": false},
+                {\"name\": \"Deployed by\", \"value\": \"${{ github.actor }}\", \"inline\": true}
               ],
-              \"footer\": {\"text\": \"Auto-deployment initiated\"},
+              \"footer\": {\"text\": \"One-click deployment completed\"},
               \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
             }]
           }" \
           $DISCORD_WEBHOOK
 
-      - name: Monitor Deployment
+      - name: Cleanup
+        if: always()
         run: |
-          echo "✅ Deployment workflow triggered successfully!"
-          echo "📊 Monitor deployment progress at:"
-          echo "${{ github.server_url }}/${{ github.repository }}/actions"
+          rm -f private_key.pem
+          rm -rf artifacts/
