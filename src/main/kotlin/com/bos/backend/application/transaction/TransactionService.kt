@@ -2,12 +2,15 @@ package com.bos.backend.application.transaction
 
 import com.bos.backend.application.CommonErrorCode
 import com.bos.backend.application.CustomException
+import com.bos.backend.application.user.UserService
 import com.bos.backend.domain.transaction.entity.RepaymentSchedule
 import com.bos.backend.domain.transaction.entity.Transaction
 import com.bos.backend.domain.transaction.enum.RepaymentType
 import com.bos.backend.domain.transaction.repository.RepaymentScheduleRepository
 import com.bos.backend.domain.transaction.repository.TransactionRepository
 import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
+import com.bos.backend.presentation.transaction.dto.RepaymentScheduleDetailDTO
+import com.bos.backend.presentation.transaction.dto.TransactionDetailResponseDTO
 import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
 import com.bos.backend.presentation.transaction.dto.UpdateTransactionRequestDTO
 import org.springframework.stereotype.Service
@@ -16,14 +19,25 @@ import org.springframework.transaction.reactive.executeAndAwait
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Service
+@Suppress("TooManyFunctions")
 class TransactionService(
     private val transactionRepository: TransactionRepository,
     private val repaymentScheduleRepository: RepaymentScheduleRepository,
+    private val userService: UserService,
     private val transactionalOperator: TransactionalOperator,
     private val characterBuilder: com.bos.backend.application.builder.CharacterBuilder,
 ) {
+    companion object {
+        private const val OVERDUE_PRIORITY = 1
+        private const val SCHEDULED_PRIORITY = 2
+        private const val IN_PROGRESS_PRIORITY = 3
+        private const val COMPLETED_PRIORITY = 4
+        private const val DEFAULT_PRIORITY = 5
+    }
+
     suspend fun createTransaction(
         userId: Long,
         createTransactionRequestDTO: CreateTransactionRequestDTO,
@@ -47,7 +61,6 @@ class TransactionService(
                     targetDate = createTransactionRequestDTO.targetDate,
                     monthlyAmount = createTransactionRequestDTO.monthlyAmount,
                     paymentDay = createTransactionRequestDTO.paymentDay,
-                    hasTargetDate = createTransactionRequestDTO.hasTargetDate,
                 )
 
             val savedTransaction = transactionRepository.save(transaction)
@@ -67,8 +80,76 @@ class TransactionService(
             throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
         }
 
-        return toTransactionResponseDTO(transaction)
+        return toTransactionResponseDTO(transaction, transaction.id)
     }
+
+    suspend fun getTransactionForShare(transactionId: Long): TransactionDetailResponseDTO {
+        val transaction = getTransactionById(transactionId)
+        val userProfile = userService.getUserProfile(transaction.userId)
+        val repaymentSchedules = repaymentScheduleRepository.findByTransactionId(transactionId)
+        val sortedSchedules = sortRepaymentSchedules(repaymentSchedules)
+        val (borrower, lender) = determineBorrowerAndLender(transaction, userProfile)
+        val calculatedMonthlyAmount = calculateMonthlyAmount(transaction, transactionId)
+
+        return TransactionDetailResponseDTO(
+            userProfileImage = userProfile.character ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND),
+            totalAmount = transaction.totalAmount,
+            remainingAmount = transaction.remainingAmount(),
+            repaymentType = transaction.repaymentType,
+            monthlyAmount = calculatedMonthlyAmount,
+            paymentDay = transaction.paymentDay,
+            borrower = borrower,
+            lender = lender,
+            repaymentSchedules = sortedSchedules.map { mapToRepaymentScheduleDetailDTO(it) },
+        )
+    }
+
+    private suspend fun getTransactionById(transactionId: Long): Transaction =
+        transactionRepository.findById(transactionId)
+            ?: throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
+
+    private fun sortRepaymentSchedules(schedules: List<RepaymentSchedule>) =
+        schedules
+            .sortedWith(
+                compareBy<RepaymentSchedule> { schedule ->
+                    when (schedule.status.name) {
+                        "OVERDUE" -> OVERDUE_PRIORITY
+                        "IN_PROGRESS" -> IN_PROGRESS_PRIORITY
+                        "SCHEDULED" -> SCHEDULED_PRIORITY
+                        "COMPLETED" -> COMPLETED_PRIORITY
+                        else -> DEFAULT_PRIORITY
+                    }
+                }.thenByDescending { it.scheduledDate },
+            )
+
+    private fun determineBorrowerAndLender(
+        transaction: Transaction,
+        userProfile: com.bos.backend.presentation.user.dto.UserProfileResponseDTO,
+    ): Pair<String, String> =
+        when (transaction.transactionType.name) {
+            "LEND" -> Pair(transaction.counterpartName, userProfile.nickname)
+            "BORROW" -> Pair(userProfile.nickname, transaction.counterpartName)
+            else -> Pair(transaction.counterpartName, userProfile.nickname)
+        }
+
+    private fun mapToRepaymentScheduleDetailDTO(schedule: RepaymentSchedule) =
+        RepaymentScheduleDetailDTO(
+            id = schedule.id!!,
+            date =
+                if (schedule.status.name == "COMPLETED") {
+                    schedule.actualDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        ?: schedule.scheduledDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                } else {
+                    schedule.scheduledDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                },
+            amount =
+                if (schedule.status.name == "COMPLETED") {
+                    schedule.actualAmount ?: schedule.scheduledAmount
+                } else {
+                    schedule.scheduledAmount
+                },
+            status = schedule.status.name,
+        )
 
     suspend fun deleteTransaction(
         userId: Long,
@@ -221,8 +302,39 @@ class TransactionService(
         return targetMonth.withDayOfMonth(adjustedPaymentDay)
     }
 
-    private fun toTransactionResponseDTO(transaction: Transaction): TransactionResponseDTO =
-        TransactionResponseDTO(
+    private suspend fun calculateMonthlyAmount(
+        transaction: Transaction,
+        transactionId: Long,
+    ): BigDecimal? =
+        when (transaction.repaymentType) {
+            RepaymentType.DIVIDED_BY_PERIOD -> {
+                val repaymentSchedules = repaymentScheduleRepository.findByTransactionId(transactionId)
+                if (repaymentSchedules.isNotEmpty()) {
+                    transaction.totalAmount.divide(
+                        BigDecimal(repaymentSchedules.size),
+                        2,
+                        RoundingMode.HALF_UP,
+                    )
+                } else {
+                    null
+                }
+            }
+            RepaymentType.FIXED_MONTHLY -> transaction.monthlyAmount
+            RepaymentType.FLEXIBLE -> null
+        }
+
+    private suspend fun toTransactionResponseDTO(
+        transaction: Transaction,
+        transactionId: Long? = null,
+    ): TransactionResponseDTO {
+        val calculatedMonthlyAmount =
+            if (transactionId != null) {
+                calculateMonthlyAmount(transaction, transactionId)
+            } else {
+                transaction.monthlyAmount
+            }
+
+        return TransactionResponseDTO(
             id = transaction.id!!,
             transactionType = transaction.transactionType,
             counterpartName = transaction.counterpartName,
@@ -236,10 +348,10 @@ class TransactionService(
             memo = transaction.memo,
             repaymentType = transaction.repaymentType,
             targetDate = transaction.targetDate,
-            monthlyAmount = transaction.monthlyAmount,
+            monthlyAmount = calculatedMonthlyAmount,
             paymentDay = transaction.paymentDay,
-            hasTargetDate = transaction.hasTargetDate,
             createdAt = transaction.createdAt,
             updatedAt = transaction.updatedAt,
         )
+    }
 }
