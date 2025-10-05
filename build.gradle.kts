@@ -116,6 +116,13 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // 테스트시 생성자 리플렉션 관련 에러 임시조치
+    jvmArgs(
+        "--add-opens",
+        "java.base/java.net=ALL-UNNAMED",
+        "--add-opens",
+        "java.base/java.lang=ALL-UNNAMED",
+    )
 }
 
 tasks.register<Copy>("copyPreCommitHook") {
