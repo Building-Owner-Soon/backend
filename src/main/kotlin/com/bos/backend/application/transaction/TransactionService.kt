@@ -22,18 +22,21 @@ class TransactionService(
     private val transactionRepository: TransactionRepository,
     private val repaymentScheduleRepository: RepaymentScheduleRepository,
     private val transactionalOperator: TransactionalOperator,
+    private val characterBuilder: com.bos.backend.application.builder.CharacterBuilder,
 ) {
     suspend fun createTransaction(
         userId: Long,
         createTransactionRequestDTO: CreateTransactionRequestDTO,
     ): TransactionResponseDTO =
         transactionalOperator.executeAndAwait {
+            val counterpartCharacter =
+                characterBuilder.buildCounterpartCharacter(createTransactionRequestDTO.counterpartCharacter)
             val transaction =
                 Transaction(
                     userId = userId,
                     transactionType = createTransactionRequestDTO.transactionType,
                     counterpartName = createTransactionRequestDTO.counterpartName,
-                    counterpartCharacter = createTransactionRequestDTO.counterpartCharacter,
+                    counterpartCharacter = counterpartCharacter,
                     relationship = createTransactionRequestDTO.relationship,
                     customRelationship = createTransactionRequestDTO.customRelationship,
                     transactionDate = createTransactionRequestDTO.transactionDate,
@@ -97,10 +100,12 @@ class TransactionService(
                 throw CustomException(CommonErrorCode.RESOURCE_NOT_FOUND)
             }
 
+            val counterpartCharacter =
+                characterBuilder.buildCounterpartCharacter(updateTransactionRequestDTO.counterpartCharacter)
             val updatedTransaction =
                 existingTransaction.copy(
                     counterpartName = updateTransactionRequestDTO.counterpartName,
-                    counterpartCharacter = updateTransactionRequestDTO.counterpartCharacter,
+                    counterpartCharacter = counterpartCharacter,
                     relationship = updateTransactionRequestDTO.relationship,
                     customRelationship = updateTransactionRequestDTO.customRelationship,
                     memo = updateTransactionRequestDTO.memo,

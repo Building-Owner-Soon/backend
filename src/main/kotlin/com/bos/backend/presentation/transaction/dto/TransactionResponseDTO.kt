@@ -1,9 +1,9 @@
 package com.bos.backend.presentation.transaction.dto
 
+import com.bos.backend.domain.transaction.entity.CounterpartCharacter
 import com.bos.backend.domain.transaction.enum.RelationshipType
 import com.bos.backend.domain.transaction.enum.RepaymentType
 import com.bos.backend.domain.transaction.enum.TransactionType
-import com.bos.backend.domain.user.entity.Character
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -12,7 +12,7 @@ data class TransactionResponseDTO(
     val id: Long,
     val transactionType: TransactionType,
     val counterpartName: String,
-    val counterpartCharacter: Character,
+    val counterpartCharacter: CounterpartCharacter,
     val relationship: RelationshipType,
     val customRelationship: String?,
     val transactionDate: LocalDate,

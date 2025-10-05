@@ -2,9 +2,11 @@ package com.bos.backend.application.builder
 
 import com.bos.backend.application.service.CharacterAssetService
 import com.bos.backend.domain.profile.enums.ProfileAssetType
+import com.bos.backend.domain.transaction.entity.CounterpartCharacter
 import com.bos.backend.domain.user.entity.Character
 import com.bos.backend.domain.user.entity.CharacterAsset
 import com.bos.backend.domain.user.factory.CharacterFactory
+import com.bos.backend.presentation.transaction.dto.CounterpartCharacterDTO
 import com.bos.backend.presentation.user.dto.UpdateCharacterDTO
 import org.springframework.stereotype.Component
 
@@ -65,6 +67,17 @@ class CharacterBuilder(
                 ),
         )
     }
+
+    suspend fun buildCounterpartCharacter(characterDTO: CounterpartCharacterDTO): CounterpartCharacter =
+        CounterpartCharacter(
+            face = characterAssetService.createCharacterAsset(characterDTO.face, ProfileAssetType.FACE),
+            hand = characterAssetService.createCharacterAsset(characterDTO.hand, ProfileAssetType.HAND),
+            skinColor = characterDTO.skinColor,
+            bang = characterAssetService.createCharacterAsset(characterDTO.bang, ProfileAssetType.BANG),
+            backHair = characterAssetService.createCharacterAsset(characterDTO.backHair, ProfileAssetType.BACK_HAIR),
+            eyes = characterAssetService.createCharacterAsset(characterDTO.eyes, ProfileAssetType.EYES),
+            mouth = characterAssetService.createCharacterAsset(characterDTO.mouth, ProfileAssetType.MOUTH),
+        )
 
     private suspend fun buildCharacterAsset(
         dtoValue: String?,
