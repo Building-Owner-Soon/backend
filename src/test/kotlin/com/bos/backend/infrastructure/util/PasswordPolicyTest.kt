@@ -8,12 +8,22 @@ class PasswordPolicyTest :
         "유효한 비밀번호는 검증을 통과해야 한다" {
             PasswordPolicy.isValidPassword("Password123!") shouldBe true
             PasswordPolicy.isValidPassword("Abc12345!") shouldBe true
-            PasswordPolicy.isValidPassword("Test@1234") shouldBe true
+            PasswordPolicy.isValidPassword("TestAbc@1234") shouldBe true
             PasswordPolicy.isValidPassword("abcDEF123@") shouldBe true
         }
 
         "영문자가 없는 비밀번호는 검증을 실패해야 한다" {
             PasswordPolicy.isValidPassword("12345678!@#") shouldBe false
+        }
+
+        "대문자가 없는 비밀번호는 검증을 실패해야 한다" {
+            PasswordPolicy.isValidPassword("password123!") shouldBe false
+            PasswordPolicy.isValidPassword("abc12345!") shouldBe false
+        }
+
+        "소문자가 없는 비밀번호는 검증을 실패해야 한다" {
+            PasswordPolicy.isValidPassword("PASSWORD123!") shouldBe false
+            PasswordPolicy.isValidPassword("ABC12345!") shouldBe false
         }
 
         "숫자가 없는 비밀번호는 검증을 실패해야 한다" {
