@@ -13,7 +13,7 @@ import com.bos.backend.domain.term.repository.UserTermAgreementRepository
 import com.bos.backend.domain.user.enum.ProviderType
 import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.domain.user.repository.UserRepository
-import com.bos.backend.infrastructure.util.PasswordValidator
+import com.bos.backend.infrastructure.util.PasswordPolicy
 import com.bos.backend.presentation.auth.dto.CheckEmailResponse
 import com.bos.backend.presentation.auth.dto.CommonSignResponseDTO
 import com.bos.backend.presentation.auth.dto.EmailVerificationCheckDTO
@@ -145,7 +145,7 @@ class AuthService(
             throw CustomException(AuthErrorCode.USER_NOT_FOUND)
         }
 
-        if (!PasswordValidator.isValidPassword(request.newPassword)) {
+        if (!PasswordPolicy.isValidPassword(request.newPassword)) {
             throw CustomException(AuthErrorCode.PASSWORD_POLICY_VIOLATION)
         }
 
@@ -165,7 +165,7 @@ class AuthService(
             throw CustomException(AuthErrorCode.INVALID_PASSWORD)
         }
 
-        if (!PasswordValidator.isValidPassword(request.newPassword)) {
+        if (!PasswordPolicy.isValidPassword(request.newPassword)) {
             throw CustomException(AuthErrorCode.PASSWORD_POLICY_VIOLATION)
         }
 
