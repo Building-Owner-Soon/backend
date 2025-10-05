@@ -686,8 +686,8 @@ paths:
         - OTHER: 기타 (customRelationship 필드 사용)
 
         ## 상환 유형
-        - BY_DATE: 날짜로 상환
-        - BY_MONTHLY: 월별 상환
+        - DIVIDED_BY_PERIOD: 기간별 분할 상환 (목표일까지 균등 분할)
+        - FIXED_MONTHLY: 고정 월납 상환 (매월 고정 금액)
         - FLEXIBLE: 유연한 상환
       security:
         - BearerAuth: []
