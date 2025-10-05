@@ -7,6 +7,7 @@ import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
 import com.bos.backend.presentation.transaction.dto.DebtSummaryResponseDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentManagementResponseDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentScheduleItemDTO
+import com.bos.backend.presentation.transaction.dto.TransactionDetailResponseDTO
 import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
 import com.bos.backend.presentation.transaction.dto.UpdateTransactionRequestDTO
 import jakarta.validation.Valid
@@ -37,10 +38,16 @@ class TransactionController(
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    suspend fun getTransactionDetail(
+    suspend fun getTransaction(
         @AuthenticationPrincipal userId: String,
         @PathVariable id: Long,
     ): TransactionResponseDTO = transactionService.getTransactionDetail(userId.toLong(), id)
+
+    @GetMapping("/{id}/share")
+    @ResponseStatus(HttpStatus.OK)
+    suspend fun getTransactionForShare(
+        @PathVariable id: Long,
+    ): TransactionDetailResponseDTO = transactionService.getTransactionForShare(id)
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

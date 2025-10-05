@@ -39,6 +39,7 @@ class SecurityConfiguration(
                         "/api/**",
                         "/actuator/**",
                         "/admin/**",
+                        "/transactions/*/share",
                     ).permitAll()
                     .anyExchange()
                     .authenticated()

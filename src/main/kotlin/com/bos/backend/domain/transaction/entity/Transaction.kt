@@ -2,7 +2,6 @@ package com.bos.backend.domain.transaction.entity
 import com.bos.backend.domain.transaction.enum.RelationshipType
 import com.bos.backend.domain.transaction.enum.RepaymentType
 import com.bos.backend.domain.transaction.enum.TransactionType
-import com.bos.backend.domain.user.entity.Character
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
@@ -21,7 +20,7 @@ data class Transaction(
     @Column("counterpart_name")
     val counterpartName: String,
     @Column("counterpart_character")
-    val counterpartCharacter: Character,
+    val counterpartCharacter: CounterpartCharacter,
     @Column("relationship")
     val relationship: RelationshipType,
     @Column("custom_relationship")
@@ -41,8 +40,6 @@ data class Transaction(
     val monthlyAmount: BigDecimal?,
     @Column("payment_day")
     val paymentDay: Int?,
-    @Column("has_target_date")
-    val hasTargetDate: Boolean?,
     @Column("created_at")
     val createdAt: Instant = Instant.now(),
     @Column("updated_at")
