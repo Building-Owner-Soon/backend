@@ -4,6 +4,20 @@ spring:
     url: ${db-host}
     username: ${db-user}
     password: ${db-password}
+  datasource:
+    url: ${jdbc-url:jdbc:mariadb://localhost:13306/bos}
+    username: ${db-user}
+    password: ${db-password}
+    driver-class-name: org.mariadb.jdbc.Driver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    url: ${jdbc-url:jdbc:mariadb://localhost:13306/bos}
+    user: ${db-user}
+    password: ${db-password}
   mail:
     host: smtp.gmail.com
     port: 587
@@ -47,6 +61,7 @@ cors:
     - "POST"
     - "PUT"
     - "DELETE"
+    - "PATCH"
   allowed-headers:
     - "*"
 

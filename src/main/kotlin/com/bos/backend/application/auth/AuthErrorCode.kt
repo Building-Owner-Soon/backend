@@ -27,8 +27,32 @@ enum class AuthErrorCode(
         "사용자를 찾을 수 없습니다.",
         HttpStatus.BAD_REQUEST,
     ),
+    USERAUTH_NOT_FOUND(
+        "사용자 인증 정보를 찾을 수 없습니다.",
+        HttpStatus.BAD_REQUEST,
+    ),
     INVALID_TOKEN(
         "유효하지 않은 토큰입니다.",
         HttpStatus.UNAUTHORIZED,
+    ),
+    REFRESH_TOKEN_NOT_FOUND(
+        "리프레시 토큰을 찾을 수 없습니다.",
+        HttpStatus.BAD_REQUEST,
+    ),
+    REFRESH_TOKEN_EXPIRED(
+        "리프레시 토큰이 만료되었습니다.",
+        HttpStatus.UNAUTHORIZED,
+    ),
+    REFRESH_TOKEN_REVOKED(
+        "리프레시 토큰이 폐기되었습니다.",
+        HttpStatus.UNAUTHORIZED,
+    ),
+    INVALID_PASSWORD(
+        "현재 비밀번호가 올바르지 않습니다.",
+        HttpStatus.BAD_REQUEST,
+    ),
+    SAME_PASSWORD(
+        "새 비밀번호는 현재 비밀번호와 달라야 합니다.",
+        HttpStatus.BAD_REQUEST,
     ),
 }

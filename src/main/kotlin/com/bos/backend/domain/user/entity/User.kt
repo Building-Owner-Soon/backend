@@ -16,9 +16,7 @@ data class User(
     @Column("marketing_agreed")
     val isMarketingAgreed: Boolean = false,
     @Column("character_components")
-    val character: Character? = null,
-    @Column("home_type")
-    val homeType: String? = null,
+    val character: Character,
     @Column("created_at")
     val createdAt: Instant = Instant.now(),
     @Column("updated_at")
@@ -35,27 +33,26 @@ data class User(
         isNotificationAllowed: Boolean?,
         isMarketingAgreed: Boolean?,
         character: Character?,
-        homeType: String?,
     ): User =
         this.copy(
             nickname = nickname ?: this.nickname,
             isNotificationAllowed = isNotificationAllowed ?: this.isNotificationAllowed,
             isMarketingAgreed = isMarketingAgreed ?: this.isMarketingAgreed,
             character = character ?: this.character,
-            homeType = homeType ?: this.homeType,
             updatedAt = Instant.now(),
         )
 }
 
 // TODO: 위치 고민
 data class Character(
-    val faceShape: CharacterAsset,
+    val face: CharacterAsset,
     val hand: CharacterAsset,
     val skinColor: String,
-    val frontHair: CharacterAsset,
+    val bang: CharacterAsset,
     val backHair: CharacterAsset,
     val eyes: CharacterAsset,
     val mouth: CharacterAsset,
+    val home: CharacterAsset,
 )
 
 data class CharacterAsset(

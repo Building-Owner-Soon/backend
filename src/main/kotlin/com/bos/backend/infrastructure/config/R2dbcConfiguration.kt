@@ -2,6 +2,8 @@ package com.bos.backend.infrastructure.config
 
 import com.bos.backend.infrastructure.converter.CharacterReadingConverter
 import com.bos.backend.infrastructure.converter.CharacterWritingConverter
+import com.bos.backend.infrastructure.converter.NotificationCategoryReadConverter
+import com.bos.backend.infrastructure.converter.NotificationCategoryWriteConverter
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.r2dbc.spi.ConnectionFactory
 import org.springframework.context.annotation.Bean
@@ -35,11 +37,14 @@ class R2dbcConfiguration {
         converters.addAll(R2dbcCustomConversions.STORE_CONVERTERS)
         return R2dbcCustomConversions(
             CustomConversions.StoreConversions.of(dialect.getSimpleTypeHolder(), converters),
+            // TODO: Converter 추가될때마다 전역 설정 건드리는 것 수정
             listOf(
                 InstantToLocalDateTimeConverter(),
                 LocalDateTimeToInstantConverter(),
                 CharacterReadingConverter(objectMapper),
                 CharacterWritingConverter(objectMapper),
+                NotificationCategoryReadConverter(),
+                NotificationCategoryWriteConverter(),
             ),
         )
     }

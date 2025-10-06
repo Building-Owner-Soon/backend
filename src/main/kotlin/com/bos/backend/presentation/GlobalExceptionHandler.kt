@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.support.WebExchangeBindException
+import org.springframework.web.server.ServerWebInputException
 
 @ControllerAdvice
 class GlobalExceptionHandler {
@@ -44,6 +45,16 @@ class GlobalExceptionHandler {
             ),
         )
     }
+
+    @Suppress("UNUSED_PARAMETER")
+    @ExceptionHandler(ServerWebInputException::class)
+    fun handleServerWebInputException(e: ServerWebInputException): ResponseEntity<ErrorResponse> =
+        ResponseEntity.badRequest().body(
+            ErrorResponse(
+                errorCode = "INVALID_REQUEST",
+                message = "요청 형식이 올바르지 않습니다.",
+            ),
+        )
 
     private fun resolveErrorCode(error: FieldError): String = ConstraintViolationConstant.getErrorCode(error.code ?: "")
 

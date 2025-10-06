@@ -1,8 +1,10 @@
 package com.bos.backend.application.auth.strategy
 
+import com.bos.backend.application.service.CharacterAssetService
 import com.bos.backend.domain.user.entity.User
 import com.bos.backend.domain.user.entity.UserAuth
 import com.bos.backend.domain.user.enum.ProviderType
+import com.bos.backend.domain.user.factory.CharacterFactory
 import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.domain.user.repository.UserRepository
 import com.bos.backend.infrastructure.external.KakaoApiService
@@ -17,6 +19,7 @@ class KakaoAuthStrategy(
     private val userRepository: UserRepository,
     private val userAuthRepository: UserAuthRepository,
     private val kakaoApiService: KakaoApiService,
+    private val characterAssetService: CharacterAssetService,
 ) : AuthStrategy {
     private val logger = LoggerFactory.getLogger(KakaoAuthStrategy::class.java)
     override val providerType: ProviderType = ProviderType.KAKAO
@@ -39,7 +42,11 @@ class KakaoAuthStrategy(
         // 사용자 생성
         val user =
             userRepository.save(
-                User(nickname = "임시 닉네임", isNotificationAllowed = false),
+                User(
+                    nickname = "임시 닉네임",
+                    character = CharacterFactory.createDefaultCharacter(characterAssetService),
+                    isNotificationAllowed = false,
+                ),
             )
 
         // 인증 정보 저장

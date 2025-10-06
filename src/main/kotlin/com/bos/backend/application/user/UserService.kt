@@ -2,14 +2,12 @@ package com.bos.backend.application.user
 
 import com.bos.backend.application.CustomException
 import com.bos.backend.application.auth.AuthErrorCode
-import com.bos.backend.application.mapper.CharacterAssets
-import com.bos.backend.application.mapper.CharacterMapper
+import com.bos.backend.application.builder.CharacterBuilder
 import com.bos.backend.application.mapper.UserMapper
-import com.bos.backend.application.service.CharacterAssetService
-import com.bos.backend.domain.profile.enums.ProfileAssetType
+import com.bos.backend.domain.user.repository.UserAuthRepository
 import com.bos.backend.domain.user.repository.UserRepository
 import com.bos.backend.presentation.user.dto.UpdateUserRequestDTO
-import com.bos.backend.presentation.user.dto.UserProfileDTO
+import com.bos.backend.presentation.user.dto.UserProfileResponseDTO
 import org.springframework.stereotype.Service
 import org.springframework.transaction.reactive.TransactionalOperator
 import org.springframework.transaction.reactive.executeAndAwait
@@ -17,23 +15,27 @@ import org.springframework.transaction.reactive.executeAndAwait
 @Service
 class UserService(
     private val userRepository: UserRepository,
+    private val userAuthRepository: UserAuthRepository,
     private val transactionalOperator: TransactionalOperator,
     private val userMapper: UserMapper,
-    private val characterMapper: CharacterMapper,
-    private val characterAssetService: CharacterAssetService,
+    private val characterBuilder: CharacterBuilder,
 ) {
-    suspend fun getUserProfile(userId: Long): UserProfileDTO {
+    suspend fun getUserProfile(userId: Long): UserProfileResponseDTO {
         val user =
             userRepository.findById(userId)
                 ?: throw CustomException(AuthErrorCode.USER_NOT_FOUND)
+        val userAuth =
+            userAuthRepository.findByUserId(userId)
+                ?: throw CustomException(AuthErrorCode.USERAUTH_NOT_FOUND)
 
-        return userMapper.toUserProfileDTO(user)
+        return userMapper.toUserProfileDTO(user, userAuth)
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     suspend fun updateUserProfile(
         userId: Long,
         updateUserRequestDTO: UpdateUserRequestDTO,
-    ): UserProfileDTO =
+    ): UserProfileResponseDTO =
         transactionalOperator.executeAndAwait {
             val user =
                 userRepository.findById(userId)
@@ -41,44 +43,7 @@ class UserService(
 
             val character =
                 updateUserRequestDTO.character?.let { characterDTO ->
-                    val assets =
-                        CharacterAssets(
-                            faceShape =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.faceShape,
-                                    ProfileAssetType.FACE,
-                                ),
-                            hand =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.hand,
-                                    ProfileAssetType.HAND,
-                                ),
-                            frontHair =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.frontHair,
-                                    ProfileAssetType.BANG,
-                                ),
-                            backHair =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.backHair,
-                                    ProfileAssetType.BACK_HAIR,
-                                ),
-                            eyes =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.eyes,
-                                    ProfileAssetType.EYES,
-                                ),
-                            mouth =
-                                characterAssetService.createCharacterAsset(
-                                    characterDTO.mouth,
-                                    ProfileAssetType.MOUTH,
-                                ),
-                        )
-
-                    characterMapper.toCharacter(
-                        assets = assets,
-                        skinColor = characterDTO.skinColor,
-                    )
+                    characterBuilder.buildCharacter(characterDTO, user.character)
                 }
 
             val updatedUser =
@@ -88,11 +53,13 @@ class UserService(
                         isNotificationAllowed = updateUserRequestDTO.isNotificationAllowed,
                         isMarketingAgreed = updateUserRequestDTO.isMarketingAgreed,
                         character = character,
-                        homeType = updateUserRequestDTO.homeType,
                     ).let {
                         userRepository.save(it)
                     }
+            val userAuth =
+                userAuthRepository.findByUserId(userId)
+                    ?: throw NoSuchElementException("UserAuth with User ID $userId not found")
 
-            userMapper.toUserProfileDTO(updatedUser)
+            userMapper.toUserProfileDTO(updatedUser, userAuth)
         }
 }

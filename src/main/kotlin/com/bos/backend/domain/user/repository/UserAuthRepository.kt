@@ -5,6 +5,8 @@ import com.bos.backend.domain.user.entity.UserAuth
 interface UserAuthRepository {
     suspend fun save(userAuth: UserAuth): UserAuth
 
+    suspend fun findByUserId(userId: Long): UserAuth?
+
     suspend fun findByProviderIdAndProviderType(
         providerId: String,
         providerType: String,
@@ -21,6 +23,16 @@ interface UserAuthRepository {
 
     suspend fun resetPassword(
         email: String,
+        newPassword: String,
+    )
+
+    suspend fun verifyPassword(
+        email: String,
+        password: String,
+    ): Boolean
+
+    suspend fun updatePassword(
+        userId: Long,
         newPassword: String,
     )
 }
