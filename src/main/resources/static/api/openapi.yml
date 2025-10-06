@@ -1782,7 +1782,79 @@ components:
           example: "홍길동"
           maxLength: 12
         counterpartCharacter:
-          $ref: "#/components/schemas/CounterpartCharacter"
+          type: object
+          required:
+            - face
+            - hand
+            - skinColor
+            - bang
+            - backHair
+            - eyes
+            - mouth
+          properties:
+            face:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "FACE_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/face_type_1.svg"
+            hand:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "HAND_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/hand_type_1.svg"
+            skinColor:
+              type: string
+              example: "#FFDBAC"
+            bang:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "BANG_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/bang_type_1.svg"
+            backHair:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "BACK_HAIR_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/back_hair_type_1.svg"
+            eyes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "EYES_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/eyes_type_1.svg"
+            mouth:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "MOUTH_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/mouth_type_1.svg"
         relationship:
           $ref: "#/components/schemas/RelationshipType"
         customRelationship:
@@ -1848,7 +1920,79 @@ components:
           example: "홍길동"
           maxLength: 12
         counterpartCharacter:
-          $ref: "#/components/schemas/CounterpartCharacter"
+          type: object
+          required:
+            - face
+            - hand
+            - skinColor
+            - bang
+            - backHair
+            - eyes
+            - mouth
+          properties:
+            face:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "FACE_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/face_type_1.svg"
+            hand:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "HAND_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/hand_type_1.svg"
+            skinColor:
+              type: string
+              example: "#FFDBAC"
+            bang:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "BANG_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/bang_type_1.svg"
+            backHair:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "BACK_HAIR_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/back_hair_type_1.svg"
+            eyes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "EYES_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/eyes_type_1.svg"
+            mouth:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "MOUTH_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/mouth_type_1.svg"
         relationship:
           $ref: "#/components/schemas/RelationshipType"
         customRelationship:
@@ -1889,7 +2033,79 @@ components:
           description: 상대방 이름
           example: "홍길동"
         counterpartCharacter:
-          $ref: "#/components/schemas/CounterpartCharacter"
+          type: object
+          required:
+            - face
+            - hand
+            - skinColor
+            - bang
+            - backHair
+            - eyes
+            - mouth
+          properties:
+            face:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "FACE_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/face_type_1.svg"
+            hand:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "HAND_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/hand_type_1.svg"
+            skinColor:
+              type: string
+              example: "#FFDBAC"
+            bang:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "BANG_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/bang_type_1.svg"
+            backHair:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "BACK_HAIR_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/back_hair_type_1.svg"
+            eyes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "EYES_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/eyes_type_1.svg"
+            mouth:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "MOUTH_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/mouth_type_1.svg"
         relationship:
           $ref: "#/components/schemas/RelationshipType"
         customRelationship:
@@ -2197,7 +2413,79 @@ components:
           description: 상대방 이름
           example: "홍길동"
         counterpartCharacter:
-          $ref: "#/components/schemas/CounterpartCharacter"
+          type: object
+          required:
+            - face
+            - hand
+            - skinColor
+            - bang
+            - backHair
+            - eyes
+            - mouth
+          properties:
+            face:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "FACE_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/face_type_1.svg"
+            hand:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "HAND_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/hand_type_1.svg"
+            skinColor:
+              type: string
+              example: "#FFDBAC"
+            bang:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "BANG_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/bang_type_1.svg"
+            backHair:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "BACK_HAIR_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/back_hair_type_1.svg"
+            eyes:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "EYES_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/eyes_type_1.svg"
+            mouth:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "MOUTH_TYPE_1"
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/mouth_type_1.svg"
         relationship:
           $ref: "#/components/schemas/RelationshipType"
         customRelationship:
