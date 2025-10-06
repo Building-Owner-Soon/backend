@@ -317,8 +317,9 @@ class TransactionService(
     ): BigDecimal? =
         when (transaction.repaymentType) {
             RepaymentType.DIVIDED_BY_PERIOD -> {
-                val repaymentSchedules = repaymentScheduleRepository.findByTransactionId(transactionId)
-                    .filter { it.status != RepaymentStatus.COMPLETED }
+                val repaymentSchedules =
+                    repaymentScheduleRepository.findByTransactionId(transactionId)
+                        .filter { it.status != RepaymentStatus.COMPLETED }
                 if (repaymentSchedules.isNotEmpty()) {
                     transaction.remainingAmount().divide(
                         BigDecimal(repaymentSchedules.size),
