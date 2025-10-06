@@ -1,5 +1,6 @@
 package com.bos.backend.infrastructure.converter
 
+import com.bos.backend.domain.transaction.entity.CounterpartCharacter
 import com.bos.backend.domain.user.entity.Character
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.core.convert.converter.Converter
@@ -18,4 +19,19 @@ class CharacterWritingConverter(
     private val objectMapper: ObjectMapper,
 ) : Converter<Character, String> {
     override fun convert(source: Character): String = objectMapper.writeValueAsString(source)
+}
+
+@ReadingConverter
+class CounterpartCharacterReadingConverter(
+    private val objectMapper: ObjectMapper,
+) : Converter<String, CounterpartCharacter> {
+    override fun convert(source: String): CounterpartCharacter =
+        objectMapper.readValue(source, CounterpartCharacter::class.java)
+}
+
+@WritingConverter
+class CounterpartCharacterWritingConverter(
+    private val objectMapper: ObjectMapper,
+) : Converter<CounterpartCharacter, String> {
+    override fun convert(source: CounterpartCharacter): String = objectMapper.writeValueAsString(source)
 }

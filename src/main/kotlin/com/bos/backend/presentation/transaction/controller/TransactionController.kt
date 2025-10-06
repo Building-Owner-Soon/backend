@@ -34,7 +34,9 @@ class TransactionController(
     suspend fun createTransaction(
         @AuthenticationPrincipal userId: String,
         @Valid @RequestBody createTransactionRequestDTO: CreateTransactionRequestDTO,
-    ): TransactionResponseDTO = transactionService.createTransaction(userId.toLong(), createTransactionRequestDTO)
+    ) {
+        transactionService.createTransaction(userId.toLong(), createTransactionRequestDTO)
+    }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
