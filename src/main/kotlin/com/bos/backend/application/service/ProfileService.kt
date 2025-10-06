@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 
 @Service
+@Suppress("TooManyFunctions")
 class ProfileService(
     private val assetService: AssetService,
     private val redisTemplate: RedisTemplate<String, String>,
@@ -55,6 +56,14 @@ class ProfileService(
     suspend fun getCurrentETag(): String? = redisTemplate.opsForValue().get(ETAG_KEY)
 
     suspend fun getSkinColors(): List<String> = SKIN_COLORS
+
+    suspend fun getRandomAsset(): Map<ProfileAssetType, AssetInfo> {
+        val assets = getAssets()
+        return ProfileAssetType.entries.associateWith { type ->
+            val assetList = assets[type] ?: emptyList()
+            checkNotNull(assetList.randomOrNull())
+        }
+    }
 
     suspend fun evictCache() {
         redisTemplate.delete(CACHE_KEY)

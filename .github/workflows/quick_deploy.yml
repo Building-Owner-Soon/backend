@@ -35,9 +35,7 @@ jobs:
             grep "bos-backend-${BRANCH_FILTER}-" | \
             sort -k1,2 | \
             tail -n 1 | \
-            awk '{print $4}' | \
-            sed 's|backend/bos-backend-||' | \
-            sed 's|\.jar$||')
+            awk '{print $4}')
 
           if [ -z "$LATEST_ARTIFACT" ]; then
             echo "❌ No artifacts found for branch: $BRANCH_FILTER"
@@ -46,14 +44,18 @@ jobs:
             exit 1
           fi
 
+          # Extract version from full path (e.g., backend/bos-backend-develop-b7aa86a8.jar -> develop-b7aa86a8)
+          ARTIFACT_VERSION=$(basename "$LATEST_ARTIFACT" .jar | sed 's|^bos-backend-||')
+
           echo "✅ Found latest artifact: $LATEST_ARTIFACT"
-          echo "ARTIFACT_VERSION=$LATEST_ARTIFACT" >> $GITHUB_OUTPUT
+          echo "✅ Artifact version: $ARTIFACT_VERSION"
+          echo "ARTIFACT_VERSION=$ARTIFACT_VERSION" >> $GITHUB_OUTPUT
 
           # Verify artifact exists
-          if aws s3 ls "s3://bos-build-artifacts/bos-backend-${LATEST_ARTIFACT}.jar" >/dev/null 2>&1; then
+          if aws s3 ls "s3://bos-build-artifacts/${LATEST_ARTIFACT}" >/dev/null 2>&1; then
             echo "✅ Artifact verified in S3"
           else
-            echo "❌ Artifact not found in S3"
+            echo "❌ Artifact not found in S3: s3://bos-build-artifacts/${LATEST_ARTIFACT}"
             exit 1
           fi
 
