@@ -50,7 +50,7 @@ class TransactionService(
     suspend fun createTransaction(
         userId: Long,
         createTransactionRequestDTO: CreateTransactionRequestDTO,
-    ): TransactionResponseDTO =
+    ) {
         transactionalOperator.executeAndAwait {
             val counterpartCharacter =
                 characterBuilder.buildCounterpartCharacter(createTransactionRequestDTO.counterpartCharacter)
@@ -74,8 +74,8 @@ class TransactionService(
 
             val savedTransaction = transactionRepository.save(transaction)
             generateRepaymentSchedules(savedTransaction)
-            toTransactionResponseDTO(savedTransaction)
         }
+    }
 
     suspend fun getTransactionDetail(
         userId: Long,
@@ -298,7 +298,7 @@ class TransactionService(
         paymentDay: Int,
     ): LocalDate {
         val targetMonth =
-            if (baseDate.dayOfMonth > paymentDay) {
+            if (baseDate.dayOfMonth >= paymentDay) {
                 baseDate.plusMonths(1)
             } else {
                 baseDate

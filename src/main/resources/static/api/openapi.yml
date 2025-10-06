@@ -727,10 +727,6 @@ paths:
       responses:
         "201":
           description: 거래내역 생성 성공
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TransactionResponse"
         "400":
           $ref: "#/components/responses/BadRequestResponseSpec"
         "401":
