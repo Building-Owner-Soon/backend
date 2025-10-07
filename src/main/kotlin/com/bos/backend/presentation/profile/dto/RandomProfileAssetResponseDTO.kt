@@ -1,7 +1,6 @@
 package com.bos.backend.presentation.profile.dto
 
 data class RandomProfileAssetResponseDTO(
-    val home: AssetDTO,
     val face: AssetDTO,
     val hand: AssetDTO,
     val bang: AssetDTO,
