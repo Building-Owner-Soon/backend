@@ -2,6 +2,8 @@ package com.bos.backend.infrastructure.config
 
 import com.bos.backend.infrastructure.converter.CharacterReadingConverter
 import com.bos.backend.infrastructure.converter.CharacterWritingConverter
+import com.bos.backend.infrastructure.converter.CounterpartCharacterReadingConverter
+import com.bos.backend.infrastructure.converter.CounterpartCharacterWritingConverter
 import com.bos.backend.infrastructure.converter.NotificationCategoryReadConverter
 import com.bos.backend.infrastructure.converter.NotificationCategoryWriteConverter
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -43,6 +45,8 @@ class R2dbcConfiguration {
                 LocalDateTimeToInstantConverter(),
                 CharacterReadingConverter(objectMapper),
                 CharacterWritingConverter(objectMapper),
+                CounterpartCharacterReadingConverter(objectMapper),
+                CounterpartCharacterWritingConverter(objectMapper),
                 NotificationCategoryReadConverter(),
                 NotificationCategoryWriteConverter(),
             ),

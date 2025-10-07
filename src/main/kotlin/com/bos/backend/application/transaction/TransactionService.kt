@@ -50,7 +50,7 @@ class TransactionService(
     suspend fun createTransaction(
         userId: Long,
         createTransactionRequestDTO: CreateTransactionRequestDTO,
-    ): TransactionResponseDTO =
+    ) {
         transactionalOperator.executeAndAwait {
             val counterpartCharacter =
                 characterBuilder.buildCounterpartCharacter(createTransactionRequestDTO.counterpartCharacter)
@@ -74,8 +74,8 @@ class TransactionService(
 
             val savedTransaction = transactionRepository.save(transaction)
             generateRepaymentSchedules(savedTransaction)
-            toTransactionResponseDTO(savedTransaction)
         }
+    }
 
     suspend fun getTransactionDetail(
         userId: Long,
@@ -223,7 +223,7 @@ class TransactionService(
     private fun generateDividedByPeriodSchedules(transaction: Transaction): List<RepaymentSchedule> {
         val targetDate = transaction.targetDate ?: throw CustomException(CommonErrorCode.INVALID_PARAMETER)
         val paymentDay = transaction.paymentDay ?: throw CustomException(CommonErrorCode.INVALID_PARAMETER)
-        val totalAmount = transaction.totalAmount
+        val remainingAmount = transaction.remainingAmount()
 
         val schedules = mutableListOf<RepaymentSchedule>()
         var currentDate =
@@ -239,12 +239,12 @@ class TransactionService(
         }
 
         if (monthsList.isNotEmpty()) {
-            val amountPerPeriod = totalAmount.divide(BigDecimal(monthsList.size), 2, RoundingMode.HALF_UP)
+            val amountPerPeriod = remainingAmount.divide(BigDecimal(monthsList.size), 2, RoundingMode.HALF_UP)
 
             monthsList.forEachIndexed { index, paymentDate ->
                 val amount =
                     if (index == monthsList.size - 1) {
-                        totalAmount - amountPerPeriod.multiply(BigDecimal(monthsList.size - 1))
+                        remainingAmount - amountPerPeriod.multiply(BigDecimal(monthsList.size - 1))
                     } else {
                         amountPerPeriod
                     }
@@ -298,7 +298,7 @@ class TransactionService(
         paymentDay: Int,
     ): LocalDate {
         val targetMonth =
-            if (baseDate.dayOfMonth > paymentDay) {
+            if (baseDate.dayOfMonth >= paymentDay) {
                 baseDate.plusMonths(1)
             } else {
                 baseDate
@@ -317,9 +317,11 @@ class TransactionService(
     ): BigDecimal? =
         when (transaction.repaymentType) {
             RepaymentType.DIVIDED_BY_PERIOD -> {
-                val repaymentSchedules = repaymentScheduleRepository.findByTransactionId(transactionId)
+                val repaymentSchedules =
+                    repaymentScheduleRepository.findByTransactionId(transactionId)
+                        .filter { it.status != RepaymentStatus.COMPLETED }
                 if (repaymentSchedules.isNotEmpty()) {
-                    transaction.totalAmount.divide(
+                    transaction.remainingAmount().divide(
                         BigDecimal(repaymentSchedules.size),
                         2,
                         RoundingMode.HALF_UP,
