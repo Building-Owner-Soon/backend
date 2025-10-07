@@ -1589,7 +1589,6 @@ components:
     RandomProfileAssetResponse:
       type: object
       required:
-        - home
         - face
         - hand
         - bang
@@ -1598,8 +1597,6 @@ components:
         - mouth
         - skinColor
       properties:
-        home:
-          $ref: "#/components/schemas/Asset"
         face:
           $ref: "#/components/schemas/Asset"
         hand:
