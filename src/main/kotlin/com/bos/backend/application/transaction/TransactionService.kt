@@ -15,7 +15,6 @@ import com.bos.backend.presentation.transaction.dto.DebtSummaryDTO
 import com.bos.backend.presentation.transaction.dto.DebtSummaryResponseDTO
 import com.bos.backend.presentation.transaction.dto.PaymentType
 import com.bos.backend.presentation.transaction.dto.RelationshipSummaryDTO
-import com.bos.backend.presentation.transaction.dto.RelationshipsResponseDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentScheduleDetailDTO
 import com.bos.backend.presentation.transaction.dto.TransactionDetailResponseDTO
 import com.bos.backend.presentation.transaction.dto.TransactionResponseDTO
@@ -363,11 +362,11 @@ class TransactionService(
         )
     }
 
-    suspend fun getRelationships(userId: Long): RelationshipsResponseDTO {
+    suspend fun getRelationships(userId: Long): List<RelationshipSummaryDTO> {
         val transactions = transactionRepository.findByUserId(userId)
 
         if (transactions.isEmpty()) {
-            return RelationshipsResponseDTO(relationships = emptyList())
+            return emptyList()
         }
 
         val transactionIds = transactions.mapNotNull { it.id }
@@ -391,33 +390,31 @@ class TransactionService(
         val today = LocalDate.now()
         val twoDaysFromNow = today.plusDays(2)
 
-        val relationships =
-            groupedTransactions.map { (key, txList) ->
-                val lendAmount =
-                    txList
-                        .filter { it.transactionType == TransactionType.LEND }
-                        .sumOf { it.remainingAmount() }
-                        .toLong()
-                val borrowAmount =
-                    txList
-                        .filter { it.transactionType == TransactionType.BORROW }
-                        .sumOf { it.remainingAmount() }
-                        .toLong()
+        return groupedTransactions.map { (key, txList) ->
+            val lendAmount =
+                txList
+                    .filter { it.transactionType == TransactionType.LEND }
+                    .sumOf { it.remainingAmount() }
+                    .toLong()
+            val borrowAmount =
+                txList
+                    .filter { it.transactionType == TransactionType.BORROW }
+                    .sumOf { it.remainingAmount() }
+                    .toLong()
 
-                val upcomingInfo = findUpcomingTransactionInfo(txList, allSchedules, today, twoDaysFromNow)
+            val upcomingInfo = findUpcomingTransactionInfo(txList, allSchedules, today, twoDaysFromNow)
 
-                RelationshipSummaryDTO(
-                    counterpartName = key.name,
-                    counterpartCharacter = txList.first().counterpartCharacter,
-                    relationship = txList.first().relationship,
-                    customRelationship = key.customRelationship,
-                    lendAmount = lendAmount,
-                    borrowAmount = borrowAmount,
-                    upcomingTransactionInfo = upcomingInfo,
-                )
-            }
-
-        return RelationshipsResponseDTO(relationships = relationships)
+            RelationshipSummaryDTO(
+                counterpartName = key.name,
+                counterpartCharacter = txList.first().counterpartCharacter,
+                relationship = txList.first().relationship,
+                customRelationship = key.customRelationship,
+                lendAmount = lendAmount,
+                borrowAmount = borrowAmount,
+                upcomingTransactionInfo = upcomingInfo,
+                transactionId = txList.first().id!!,
+            )
+        }
     }
 
     private fun findUpcomingTransactionInfo(

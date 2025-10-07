@@ -1,7 +1,7 @@
 package com.bos.backend.presentation.transaction.controller
 
 import com.bos.backend.application.transaction.TransactionService
-import com.bos.backend.presentation.transaction.dto.RelationshipsResponseDTO
+import com.bos.backend.presentation.transaction.dto.RelationshipSummaryDTO
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,5 +18,5 @@ class RelationshipController(
     @ResponseStatus(HttpStatus.OK)
     suspend fun getRelationships(
         @AuthenticationPrincipal userId: String,
-    ): RelationshipsResponseDTO = transactionService.getRelationships(userId.toLong())
+    ): List<RelationshipSummaryDTO> = transactionService.getRelationships(userId.toLong())
 }

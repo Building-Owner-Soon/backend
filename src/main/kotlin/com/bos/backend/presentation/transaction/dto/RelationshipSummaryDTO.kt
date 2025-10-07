@@ -11,4 +11,5 @@ data class RelationshipSummaryDTO(
     val lendAmount: Long,
     val borrowAmount: Long,
     val upcomingTransactionInfo: UpcomingTransactionInfoDTO?,
+    val transactionId: Long,
 )
