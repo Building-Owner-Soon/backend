@@ -1,7 +1,9 @@
 package com.bos.backend.domain.transaction.entity
 
 import com.bos.backend.domain.user.entity.CharacterAsset
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class CounterpartCharacter(
     val face: CharacterAsset,
     val hand: CharacterAsset,

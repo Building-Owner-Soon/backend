@@ -982,6 +982,7 @@ paths:
         - 상대방 이름, 캐릭터, 관계
         - 해당 사람과의 거래 요약 (갚을돈/받을돈 총액)
         - 오늘 갚을돈이나 상환일 임박 알림 여부
+        - 채무관계의 대표 거래 ID
       security:
         - BearerAuth: []
       responses:
@@ -990,7 +991,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RelationshipsResponse"
+                type: array
+                items:
+                  $ref: "#/components/schemas/RelationshipSummary"
         "401":
           description: 인증 실패
         "500":
@@ -2400,6 +2403,7 @@ components:
         - relationship
         - lendAmount
         - borrowAmount
+        - transactionId
       properties:
         counterpartName:
           type: string
@@ -2501,6 +2505,11 @@ components:
           description: |-
             사용자가 확인해야할 임박한 거래 정보
             없는 경우에 null
+        transactionId:
+          type: integer
+          format: int64
+          description: 채무관계의 대표 거래 ID
+          example: 123
     UpcomingTransactionInfo:
       type: object
       required:
