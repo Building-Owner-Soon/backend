@@ -56,7 +56,6 @@ class ProfileController(
         val randomAssets = profileService.getRandomAsset()
         val response =
             RandomProfileAssetResponseDTO(
-                home = randomAssets[ProfileAssetType.HOME]!!.let { AssetDTO(it.id, it.uri) },
                 face = randomAssets[ProfileAssetType.FACE]!!.let { AssetDTO(it.id, it.uri) },
                 hand = randomAssets[ProfileAssetType.HAND]!!.let { AssetDTO(it.id, it.uri) },
                 bang = randomAssets[ProfileAssetType.BANG]!!.let { AssetDTO(it.id, it.uri) },
