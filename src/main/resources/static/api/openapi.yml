@@ -2401,8 +2401,8 @@ components:
         - counterpartName
         - counterpartCharacter
         - relationship
-        - lendAmount
-        - borrowAmount
+        - transactionType
+        - totalAmount
         - transactionId
       properties:
         counterpartName:
@@ -2489,16 +2489,13 @@ components:
           type: string
           nullable: true
           description: 기타 관계
-        lendAmount:
+        transactionType:
+          $ref: "#/components/schemas/TransactionType"
+        totalAmount:
           type: number
           format: decimal
-          description: 이 사람에게 빌려준 돈 총액
+          description: 이 사람과의 거래 총액
           example: 500000
-        borrowAmount:
-          type: number
-          format: decimal
-          description: 이 사람에게서 빌린 돈 총액
-          example: 200000
         upcomingTransactionInfo:
           $ref: "#/components/schemas/UpcomingTransactionInfo"
           nullable: true
@@ -2513,20 +2510,9 @@ components:
     UpcomingTransactionInfo:
       type: object
       required:
-        - paymentType
         - dueDate
         - amount
       properties:
-        paymentType:
-          type: string
-          enum:
-            - REPAYMENT
-            - RECEIVABLE
-          description: |-
-            결제 타입
-            - REPAYMENT: 갚을돈
-            - RECEIVABLE: 받을돈
-          example: REPAYMENT
         dueDate:
           type: string
           format: date

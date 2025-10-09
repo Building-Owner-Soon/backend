@@ -13,7 +13,6 @@ import com.bos.backend.domain.transaction.repository.TransactionRepository
 import com.bos.backend.presentation.transaction.dto.CreateTransactionRequestDTO
 import com.bos.backend.presentation.transaction.dto.DebtSummaryDTO
 import com.bos.backend.presentation.transaction.dto.DebtSummaryResponseDTO
-import com.bos.backend.presentation.transaction.dto.PaymentType
 import com.bos.backend.presentation.transaction.dto.RelationshipSummaryDTO
 import com.bos.backend.presentation.transaction.dto.RepaymentScheduleDetailDTO
 import com.bos.backend.presentation.transaction.dto.TransactionDetailResponseDTO
@@ -402,6 +401,13 @@ class TransactionService(
                     .sumOf { it.remainingAmount() }
                     .toLong()
 
+            val (transactionType, totalAmount) =
+                if (lendAmount >= borrowAmount) {
+                    Pair(TransactionType.LEND, lendAmount)
+                } else {
+                    Pair(TransactionType.BORROW, borrowAmount)
+                }
+
             val upcomingInfo = findUpcomingTransactionInfo(txList, allSchedules, today, twoDaysFromNow)
 
             RelationshipSummaryDTO(
@@ -409,8 +415,8 @@ class TransactionService(
                 counterpartCharacter = txList.first().counterpartCharacter,
                 relationship = txList.first().relationship,
                 customRelationship = key.customRelationship,
-                lendAmount = lendAmount,
-                borrowAmount = borrowAmount,
+                transactionType = transactionType,
+                totalAmount = totalAmount,
                 upcomingTransactionInfo = upcomingInfo,
                 transactionId = txList.first().id!!,
             )
@@ -439,19 +445,10 @@ class TransactionService(
                 .sortedBy { it.scheduledDate }
 
         return upcomingSchedules.firstOrNull()?.let { earliestSchedule ->
-            transactions.find { it.id == earliestSchedule.transactionId }?.let { transaction ->
-                val paymentType =
-                    when (transaction.transactionType) {
-                        TransactionType.LEND -> PaymentType.REPAYMENT
-                        TransactionType.BORROW -> PaymentType.RECEIVABLE
-                    }
-
-                UpcomingTransactionInfoDTO(
-                    paymentType = paymentType,
-                    dueDate = earliestSchedule.scheduledDate,
-                    amount = earliestSchedule.scheduledAmount.toLong(),
-                )
-            }
+            UpcomingTransactionInfoDTO(
+                dueDate = earliestSchedule.scheduledDate,
+                amount = earliestSchedule.scheduledAmount.toLong(),
+            )
         }
     }
 
